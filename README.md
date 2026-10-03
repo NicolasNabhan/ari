@@ -23,3 +23,7 @@ Then open http://localhost:3000/voice-check.
 ```bash
 npm test && npm run typecheck && npm run lint
 ```
+
+## Credits
+
+Ari's fallback face is the "brunette" example avatar from [TalkingHead](https://github.com/met4citizen/TalkingHead), created with Ready Player Me, licensed [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) (non-commercial use). TalkingHead itself is MIT.

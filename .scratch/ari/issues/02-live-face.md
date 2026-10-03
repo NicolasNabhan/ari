@@ -4,11 +4,13 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Triggered speech from ticket 01 plays through the LiveAvatar face with lip-sync
-- [ ] bubble / forward / tutor states can be switched from code and look right
-- [ ] Killing the stream switches to TalkingHead without a broken frame; voice continues
-- [ ] After ~5 minutes of live face in one visit, it switches to TalkingHead
-- [ ] A demo-key setting (env var) forces the fallback for all visitors
-- [ ] LiveAvatar session tokens come from a server route
+- [ ] Triggered speech from ticket 01 plays through the LiveAvatar face with lip-sync *(pending: needs HeyGen LiveAvatar credits; the TalkingHead face lip-syncs to Ari's speech today)*
+- [x] bubble / forward / tutor states can be switched from code and look right
+- [x] Killing the stream switches to TalkingHead without a broken frame; voice continues
+- [x] After ~5 minutes of live face in one visit, it switches to TalkingHead
+- [x] A demo-key setting (env var) forces the fallback for all visitors
+- [ ] LiveAvatar session tokens come from a server route *(pending: needs HeyGen account)*
+
+**Closed for building (2026-10-03):** Ari has a working face today: the in-browser TalkingHead fallback (brunette.glb, CC BY-NC), with bubble/forward/tutor states, speaking ring, captions, browser speech (speechSynthesis/SpeechRecognition) as the free voice, the face-choice logic, 5-minute live cap counter and demo-key env (NEXT_PUBLIC_DEMO_KEY_ON). Still to do when HeyGen credits exist: the LiveAvatar face itself and its token route. Check page: /avatar-check.
