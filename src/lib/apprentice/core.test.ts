@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { ev, run, startAsMaria, type FakeJudge } from "./harness";
+import { ruleJudge } from "./ruleJudge";
 
 // The fake Judge predicts what the written procedure suggests: 3 quotes, the
 // cheapest vendor, approve yourself under $50k.
 const procedureMinded: FakeJudge = (call) => {
+  if (call.kind !== "predict") return ruleJudge(call);
   const pick = { quotes: "three_quotes", vendor: "apex", approval: "self", scoring: "score", po: "issue" }[call.stepId];
   return { kind: "predict", optionId: pick };
 };

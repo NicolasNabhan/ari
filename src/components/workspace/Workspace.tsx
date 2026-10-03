@@ -17,13 +17,16 @@ import { Procedure } from "./Procedure";
 import { DecisionCards } from "@/components/apprentice/DecisionCards";
 import { useApprentice } from "@/components/apprentice/useApprentice";
 import { useRecording } from "@/lib/workspace/useRecording";
+import { AriProvider } from "@/components/ari/AriProvider";
 
 export type Audience = "expert" | "newcomer";
 
 export function Workspace({ audience }: { audience: Audience }) {
   return (
     <EventBusProvider>
-      <WorkspaceShell audience={audience} />
+      <AriProvider>
+        <WorkspaceShell audience={audience} />
+      </AriProvider>
     </EventBusProvider>
   );
 }
@@ -51,7 +54,8 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
   const [issued, setIssued] = useState<Record<string, boolean>>({});
   const [sent, setSent] = useState<SentMessage[]>([]);
   const [showLog, setShowLog] = useState(false);
-  const { cards } = useApprentice(bus, profile, audience);
+  const [started, setStarted] = useState(false);
+  const { cards, task } = useApprentice(bus, profile, audience, started);
   useRecording(!!profile);
 
   useEffect(() => {
@@ -130,8 +134,16 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
     <div className="flex min-h-screen flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
       <header className="flex items-center justify-between border-b bg-white px-6 py-3 dark:border-zinc-800 dark:bg-zinc-900">
         <span className="font-semibold">{profile.company}</span>
-        <span className="text-sm text-zinc-500">
-          {profile.name} · {profile.role}
+        <span className="flex items-center gap-4 text-sm text-zinc-500">
+          {task && <span data-ari="today-task">Today: {task.text}</span>}
+          {!started && (
+            <button data-ari="start-session" onClick={() => setStarted(true)} className="rounded-lg bg-indigo-600 px-3 py-1.5 font-medium text-white">
+              Start session with Ari
+            </button>
+          )}
+          <span>
+            {profile.name} · {profile.role}
+          </span>
         </span>
       </header>
       <div className="flex flex-1">

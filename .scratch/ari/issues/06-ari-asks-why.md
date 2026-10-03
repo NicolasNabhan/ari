@@ -4,12 +4,14 @@
 
 **Blocked by:** 02, 05
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Session start greeting by name and today's-task question, answered by voice
-- [ ] Claude-backed Judge returns typed results for explain / matters / predict / basic classify
-- [ ] Core test: the 2×2 rule — asks only when not-understood AND matters; usual-but-unexplained choices still ask
-- [ ] Core test: quiet at 'request 3 quotes' (card: follows procedure §2), asks at Vendor B over cheaper A
-- [ ] Avatar goes forward to ask and back to bubble afterwards
-- [ ] Spoken answer transcribed and attached to the card as 🗣 with a type
-- [ ] 🤖 cards show evidence and a certainty bar
+- [x] Session start greeting by name and today's-task question, answered by voice
+- [ ] Claude-backed Judge returns typed results for explain / matters / predict / basic classify *(code done: /api/judge, claude-opus-5-5, structured outputs, fallbacks: "default"; not yet run live: needs ANTHROPIC_API_KEY. The rule Judge covers the demo meanwhile.)*
+- [x] Core test: the 2×2 rule — asks only when not-understood AND matters; usual-but-unexplained choices still ask
+- [x] Core test: quiet at 'request 3 quotes' (card: follows procedure §2), asks at Vendor B over cheaper A
+- [x] Avatar goes forward to ask and back to bubble afterwards
+- [x] Spoken answer transcribed and attached to the card as 🗣 with a type
+- [x] 🤖 cards show evidence and a certainty bar
+
+**Notes:** assess = explain + matters in one Judge call (types, evidence, confidence, question). Voice runs on browser speech for now; the answer box under Ari's caption accepts typed answers when there's no microphone. Sessions start from a 'Start session with Ari' button (browsers block speech without a click).

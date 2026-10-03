@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { browserListenOnce, browserSpeak } from "@/lib/ari/browserVoice";
+import { browserListenOnce, browserSpeak, canListen } from "@/lib/ari/browserVoice";
 import { chooseFace, type AvatarState, type FaceChoice } from "@/lib/ari/face";
 import { TalkingHeadFace, type FaceHandle } from "./TalkingHeadFace";
 
@@ -12,7 +12,9 @@ type Ari = {
   caption: string | null;
   speaking: boolean;
   say: (text: string, lang?: string) => Promise<void>;
+  // Resolves with what the person said out loud, or typed into the answer box.
   listen: (lang?: string) => Promise<string>;
+  listening: boolean;
   simulateStreamFailure: () => void;
 };
 
@@ -47,17 +49,56 @@ export function AriProvider({ children, initialState = "bubble" }: React.PropsWi
     setSpeaking(false);
   }, []);
 
-  const listen = useCallback((lang = "en-US") => browserListenOnce(lang).result, []);
+  const [listening, setListening] = useState(false);
+  const answer = useRef<{ resolve: (text: string) => void; stopMic: () => void; lang: string } | null>(null);
+
+  const finish = useCallback((text: string) => {
+    const pending = answer.current;
+    if (!pending || !text.trim()) return;
+    answer.current = null;
+    pending.stopMic();
+    setListening(false);
+    pending.resolve(text.trim());
+  }, []);
+
+  const startMic = useCallback(() => {
+    const pending = answer.current;
+    if (!pending || !canListen()) return;
+    const mic = browserListenOnce(pending.lang);
+    pending.stopMic = mic.stop;
+    mic.result.then((heard) => {
+      if (answer.current === pending) finish(heard);
+    });
+  }, [finish]);
+
+  const listen = useCallback(
+    (lang = "en-US") =>
+      new Promise<string>((resolve) => {
+        answer.current = { resolve, stopMic: () => {}, lang };
+        setListening(true);
+        startMic();
+      }),
+    [startMic],
+  );
 
   const value = useMemo<Ari>(
-    () => ({ state, setState, face, caption, speaking, say, listen, simulateStreamFailure: () => setStreamFailed(true) }),
-    [state, face, caption, speaking, say, listen],
+    () => ({ state, setState, face, caption, speaking, say, listen, listening, simulateStreamFailure: () => setStreamFailed(true) }),
+    [state, face, caption, speaking, say, listen, listening],
   );
 
   return (
     <AriContext.Provider value={value}>
       {children}
-      <AriAvatar state={state} caption={caption} speaking={speaking} face={face} faceRef={faceRef} />
+      <AriAvatar
+        state={state}
+        caption={caption}
+        speaking={speaking}
+        face={face}
+        faceRef={faceRef}
+        listening={listening}
+        onAnswer={finish}
+        onRetryMic={startMic}
+      />
     </AriContext.Provider>
   );
 }
@@ -103,13 +144,20 @@ function AriAvatar({
   speaking,
   face,
   faceRef,
+  listening,
+  onAnswer,
+  onRetryMic,
 }: {
   state: AvatarState;
   caption: string | null;
   speaking: boolean;
   face: FaceChoice;
   faceRef: React.RefObject<FaceHandle | null>;
+  listening: boolean;
+  onAnswer: (text: string) => void;
+  onRetryMic: () => void;
 }) {
+  const [typed, setTyped] = useState("");
   // TalkingHead sizes its canvas on window resize.
   useEffect(() => {
     const t = setTimeout(() => window.dispatchEvent(new Event("resize")), 320);
@@ -122,6 +170,31 @@ function AriAvatar({
         <div className="pointer-events-auto max-w-xs rounded-2xl bg-white px-4 py-3 text-sm shadow-lg dark:bg-zinc-800">
           <span className="font-semibold text-indigo-600 dark:text-indigo-300">Ari: </span>
           {caption}
+          {listening && (
+            <form
+              className="mt-2 flex gap-1"
+              onSubmit={(e) => {
+                e.preventDefault();
+                onAnswer(typed);
+                setTyped("");
+              }}
+            >
+              <input
+                data-ari="answer-input"
+                autoFocus
+                className="min-w-0 flex-1 rounded border px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+                placeholder="Answer out loud, or type…"
+                value={typed}
+                onChange={(e) => setTyped(e.target.value)}
+              />
+              <button type="button" title="Listen again" onClick={onRetryMic} className="rounded border px-2 dark:border-zinc-600">
+                🎤
+              </button>
+              <button data-ari="answer-send" className="rounded bg-indigo-600 px-2 text-white">
+                ↵
+              </button>
+            </form>
+          )}
         </div>
       )}
       <div className={`pointer-events-auto overflow-hidden bg-indigo-50 transition-all duration-300 dark:bg-indigo-950 ${FRAME[state]} ${speaking ? "ring-4 ring-indigo-500" : ""}`}>

@@ -1,4 +1,4 @@
-import type { DecisionCard, OptionStatus } from "@/lib/apprentice/types";
+import type { DecisionCard, OptionStatus, Reason } from "@/lib/apprentice/types";
 
 const STATUS_NOTE: Record<OptionStatus, string> = {
   procedure: "per procedure",
@@ -41,6 +41,12 @@ export function DecisionCards({ cards }: { cards: DecisionCard[] }) {
                   );
                 })}
               </ul>
+              {card.question && !card.reason && (
+                <p className="mt-2 rounded-lg bg-indigo-50 px-2 py-1 text-xs text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                  Ari asked: &ldquo;{card.question}&rdquo;
+                </p>
+              )}
+              {card.reason && <ReasonView reason={card.reason} />}
               {card.howNotes.length > 0 && (
                 <ul data-ari="how-notes" className="mt-2 space-y-0.5 text-xs text-zinc-500">
                   {card.howNotes.map((n) => (
@@ -54,5 +60,27 @@ export function DecisionCards({ cards }: { cards: DecisionCard[] }) {
         </ol>
       )}
     </section>
+  );
+}
+
+function ReasonView({ reason }: { reason: Reason }) {
+  const fromExpert = reason.source === "expert";
+  return (
+    <div data-ari="reason" data-source={reason.source} className="mt-2 rounded-lg border border-zinc-200 p-2 dark:border-zinc-700">
+      <p>
+        <span title={fromExpert ? "Maria said this" : "Ari's own explanation"}>{fromExpert ? "🗣" : "🤖"}</span>{" "}
+        {fromExpert ? <q>{reason.text}</q> : reason.text}
+      </p>
+      {reason.types.length > 0 && <p className="mt-1 text-xs text-zinc-500">{reason.types.join(" · ")}</p>}
+      {!fromExpert && reason.evidence.length > 0 && <p className="mt-1 text-xs text-zinc-500">Evidence: {reason.evidence.join("; ")}</p>}
+      {!fromExpert && reason.confidence !== undefined && (
+        <div className="mt-1 flex items-center gap-2 text-xs text-zinc-400" title="How sure Ari is">
+          <div className="h-1.5 flex-1 rounded-full bg-zinc-200 dark:bg-zinc-700">
+            <div className="h-1.5 rounded-full bg-indigo-500" style={{ width: `${Math.round(reason.confidence * 100)}%` }} />
+          </div>
+          {Math.round(reason.confidence * 100)}%
+        </div>
+      )}
+    </div>
   );
 }
