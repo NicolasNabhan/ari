@@ -78,6 +78,21 @@ describe("end-of-session review", () => {
     expect(effects.at(-1)).toEqual({ kind: "session_ended" });
   });
 
+  it("never asks a follow-up after the session has ended", () => {
+    const vague: FakeJudge = (call) =>
+      call.kind === "classify" ? { kind: "classify", types: ["Personal preference"], summary: call.answer, followUp: "Experience or taste?" } : quietJudge(call);
+    // Hold the classify answer back until after the session ends.
+    let held: CoreInput | null = null;
+    const holdClassify: FakeJudge = () => null;
+    const { state } = run([...session, end, say("No"), { kind: "review_correct", cardId: "req-laptops:quotes", text: "I just like it" }, { kind: "command", name: "review_skip" }], (c) =>
+      c.kind === "classify" ? holdClassify(c) : quietJudge(c),
+    );
+    const requestId = Object.keys(state.pending).find((id) => state.pending[id].call === "classify")!;
+    held = { kind: "judge_result", requestId, result: vague({ kind: "classify", card: state.cards["req-laptops:quotes"], answer: "I just like it", context: { profile: null, request: { id: "", subject: "", body: "", budget: 0, due: "" }, cards: [], task: null } })! };
+    const after = run([held], ruleJudge, state);
+    expect(after.effects.some((e) => e.kind === "ask")).toBe(false);
+  });
+
   it("ends right away when there are no quiet guesses to check", () => {
     const { effects } = run([startAsMaria, say("laptops"), end], ruleJudge);
     expect(effects.at(-1)).toEqual({ kind: "session_ended" });

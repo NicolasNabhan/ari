@@ -38,7 +38,7 @@ describe("lessons from a session", () => {
   });
 
   it("reads amounts written as 25k, $25,000 or 25000", () => {
-    for (const text of ["over 25k", "over $25,000", "anything above 25000"]) {
+    for (const text of ["over 25k", "over $25,000", "anything above 25000", "after 2 late deliveries, over $25k", "since 2024, anything above $25,000"]) {
       const card = { ...run(judgeRun, ruleJudge).cards.find((c) => c.stepId === "approval")! };
       card.reason = { ...card.reason!, text: `New suppliers ${text} go to the CFO` };
       expect(deriveGuardrails([card], "Maria")[0]?.minAmount).toBe(25000);

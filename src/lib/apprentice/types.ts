@@ -147,6 +147,7 @@ export type CoreState = {
   followedUp: string[]; // cards Ari already asked one follow-up about
   review: Review | null;
   lang: Lang;
+  ended: boolean;
   nextRequestId: number;
 };
 

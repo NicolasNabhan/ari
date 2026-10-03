@@ -34,6 +34,7 @@ export function initialState(): CoreState {
     followedUp: [],
     review: null,
     lang: "en-US",
+    ended: false,
   };
 }
 
@@ -232,7 +233,10 @@ function reviewSay(out: Out, review: Review, text: string): Out {
 }
 
 function endSession(out: Out): Out {
-  return { state: { ...out.state, review: null, openQuestion: null }, effects: [...out.effects, { kind: "avatar", state: "bubble" }, { kind: "session_ended" }] };
+  return {
+    state: { ...out.state, review: null, openQuestion: null, questionQueue: [], ended: true },
+    effects: [...out.effects, { kind: "avatar", state: "bubble" }, { kind: "session_ended" }],
+  };
 }
 
 function showList(out: Out, queue: string[]): Out {
@@ -392,7 +396,7 @@ function onJudgeResult(state: CoreState, input: Extract<CoreInput, { kind: "judg
       if (!card?.reason || card.reason.source !== "expert") return out;
       out = putCard(out, { ...card, reason: { ...card.reason, types: result.types }, ...(result.knowledge ? { knowledge: result.knowledge } : {}) });
       // No follow-ups during the end-of-session review: Maria is wrapping up.
-      if (!result.followUp || out.state.review || out.state.followedUp.includes(card.id)) return out;
+      if (!result.followUp || out.state.review || out.state.ended || out.state.followedUp.includes(card.id)) return out;
       out = { ...out, state: { ...out.state, followedUp: [...out.state.followedUp, card.id] } };
       return ask(out, { cardId: card.id, text: result.followUp });
     }

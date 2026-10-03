@@ -40,11 +40,15 @@ export function AriProvider({ children, initialState = "bubble" }: React.PropsWi
   const liveSecondsUsed = useLiveSeconds(LIVE_CONFIGURED && DEMO_KEY_ON && !streamFailed);
   const face = chooseFace({ liveConfigured: LIVE_CONFIGURED, demoKeyOn: DEMO_KEY_ON, liveSecondsUsed, streamFailed });
 
+  const latest = useRef(0);
   const say = useCallback(async (text: string, lang = "en-US") => {
+    const id = ++latest.current;
     setCaption(text);
     setSpeaking(true);
     faceRef.current?.mouth(text, 1, lang.slice(0, 2));
     await browserSpeak(text, lang);
+    // A newer line may have cut this one off; only the newest one stops the face.
+    if (id !== latest.current) return;
     faceRef.current?.stop();
     setSpeaking(false);
   }, []);

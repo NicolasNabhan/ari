@@ -8,12 +8,18 @@ import type { CoreState, DecisionCard, Guardrail, Lessons } from "./types";
 const OPTION_WORDS: Record<string, string> = { cfo: "the CFO", manager: "your manager", self: "you" };
 const OPTION_WORDS_ES: Record<string, string> = { cfo: "al director financiero", manager: "a tu responsable", self: "a ti" };
 
-// "25k", "$25,000", "25000" → 25000
+// "over 25k", "above $25,000", "$25000" → 25000. Prefers the amount after
+// "over/above/more than", then a "$" or "k" amount, and ignores small numbers
+// like "2 late deliveries" or years.
 export function amountIn(text: string): number | null {
-  const m = text.match(/\$?\s?(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s?(k\b)?/i);
-  if (!m) return null;
-  const n = Number(m[1].replace(/,/g, ""));
-  return m[2] ? n * 1000 : n;
+  const parse = (m: RegExpMatchArray) => Number(m[1].replace(/,/g, "")) * (m[2] ? 1000 : 1);
+  const AMOUNT = "\\$?\\s?(\\d{1,3}(?:,\\d{3})+|\\d+(?:\\.\\d+)?)\\s?(k\\b)?";
+  const after = text.match(new RegExp(`(?:over|above|more than|exceeding|>)\\s*${AMOUNT}`, "i"));
+  if (after) return parse(after);
+  for (const m of text.matchAll(new RegExp(AMOUNT, "gi"))) {
+    if (m[0].includes("$") || m[2]) return parse(m);
+  }
+  return null;
 }
 
 const usdShort = (n: number) => (n % 1000 === 0 ? `$${n / 1000}k` : `$${n.toLocaleString("en-US")}`);
