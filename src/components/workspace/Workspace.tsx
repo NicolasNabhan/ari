@@ -5,7 +5,8 @@ import { northwind, quoteFor } from "@/lib/northwind/seed";
 import type { ApprovalRoute, Screen } from "@/lib/workspace/events";
 import { EventBusProvider, useEventBus } from "@/lib/workspace/WorkspaceContext";
 import { loadProfile, MARIA, NEWCOMER, saveProfile, type Audience, type Profile } from "@/lib/workspace/profile";
-import { MARIA_SESSION } from "@/lib/apprentice/mariaSession";
+import type { Lessons } from "@/lib/apprentice/types";
+import { ScriptCard } from "@/components/apprentice/ScriptCard";
 import { ProfileForm } from "./ProfileForm";
 import { Inbox } from "./Inbox";
 import { RequestQueue } from "./RequestQueue";
@@ -22,11 +23,11 @@ import { ReviewList } from "@/components/apprentice/ReviewList";
 import { ProcedureView } from "@/components/apprentice/ProcedureView";
 import { AriProvider } from "@/components/ari/AriProvider";
 
-export function Workspace({ audience }: { audience: Audience }) {
+export function Workspace({ audience, lessons, guided = false }: { audience: Audience; lessons?: Lessons; guided?: boolean }) {
   return (
     <EventBusProvider>
       <AriProvider>
-        <WorkspaceShell audience={audience} />
+        <WorkspaceShell audience={audience} lessons={lessons} guided={guided} />
       </AriProvider>
     </EventBusProvider>
   );
@@ -42,7 +43,7 @@ const NAV: { screen: Screen; label: string }[] = [
   { screen: "procedure", label: "Procedure" },
 ];
 
-function WorkspaceShell({ audience }: { audience: Audience }) {
+function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; lessons?: Lessons; guided: boolean }) {
   const bus = useEventBus();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -62,6 +63,7 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
     profile,
     audience,
     started,
+    lessons,
   );
   const teaching = audience === "newcomer";
   useRecording(!!profile);
@@ -169,7 +171,11 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
               End session
             </button>
           )}
-          {review.ended && <span className="font-medium text-green-700 dark:text-green-400">Session saved</span>}
+          {review.ended && (
+            <a data-ari="teach-back" href="/learn?from=you" className="rounded-lg bg-green-600 px-3 py-1.5 font-medium text-white">
+              Session saved · Now watch Ari teach what you just taught it →
+            </a>
+          )}
           {!started && (
             <button data-ari="start-session" onClick={() => setStarted(true)} className="rounded-lg bg-indigo-600 px-3 py-1.5 font-medium text-white">
               {teaching ? "Start learning with Ari" : "Start session with Ari"}
@@ -259,8 +265,12 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
                   </button>
                 </div>
               )}
-              <ProcedureView />
-              <DecisionCards title={`${MARIA_SESSION.expert}'s playbook`} cards={MARIA_SESSION.cards} activeStep={teachingStep} />
+              {lessons && (
+                <>
+                  <ProcedureView lessons={lessons} />
+                  <DecisionCards title={`${lessons.expert}'s playbook`} cards={lessons.cards} activeStep={teachingStep} />
+                </>
+              )}
             </>
           ) : (
             <DecisionCards cards={cards} />
@@ -277,6 +287,7 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
           </div>
         </aside>
       </div>
+      {guided && !teaching && <ScriptCard started={started} task={task} cards={cards} ended={review.ended} />}
       {review.list && (
         <ReviewList
           cards={review.list.map((id) => cards.find((c) => c.id === id)!).filter(Boolean)}

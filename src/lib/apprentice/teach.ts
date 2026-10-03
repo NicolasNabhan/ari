@@ -16,7 +16,7 @@ type Phrases = {
   whenDid: (expert: string, subject: string) => string;
   chose: (expert: string, what: string) => string;
   choseTo: (label: string) => string;
-  reason: (text: string) => string;
+  reason: (expert: string, text: string) => string;
   understanding: (text: string) => string;
   guess: (expert: string) => string;
   noReason: (expert: string) => string;
@@ -28,7 +28,7 @@ type Phrases = {
   knowledgeTold: (expert: string, text: string) => string;
   knowledgeFound: (expert: string, text: string, source: string) => string;
   notSeen: (expert: string) => string;
-  watch: Record<StepId, string>;
+  watch: (expert: string) => Record<StepId, string>;
   or: string;
 };
 
@@ -46,7 +46,7 @@ const EN: Phrases = {
   whenDid: (expert, subject) => `When ${expert} did this for "${subject}",`,
   chose: (expert, what) => `${expert} chose ${what}.`,
   choseTo: (label) => `to ${lcfirst(label)}`,
-  reason: (text) => `Her reason: "${text}"`,
+  reason: (expert, text) => `${expert}'s reason: "${text}"`,
   understanding: (text) => `My understanding: ${lcfirst(text)}`,
   guess: (expert) => ` That's my best guess, not confirmed by ${expert}.`,
   noReason: (expert) => `${expert} didn't say why.`,
@@ -54,18 +54,18 @@ const EN: Phrases = {
   must: "That's a rule you must follow.",
   advice: "That's strong advice from experience, not a hard rule.",
   choice: (expert) => `That's ${expert}'s personal style, so do it your own way.`,
-  how: (expert, notes) => `How ${expert} worked: ${notes.map((n) => `she ${lcfirst(n)}`).join("; ")}.`,
+  how: (expert, notes) => `How ${expert} worked: ${notes.map(lcfirst).join("; ")}.`,
   knowledgeTold: (expert, text) =>
     `To compare vendors, ${expert} uses this: ${text}. It isn't written down anywhere; ${expert} learned it from a colleague, so remember it.`,
   knowledgeFound: (expert, text, source) => `To compare vendors, ${expert} uses this: ${text}. You can find it in: ${lcfirst(source)}.`,
   notSeen: (expert) => `${expert} didn't do that step in the session I watched, so I don't know yet.`,
-  watch: {
-    quotes: "Watch: I'll ask the vendors for quotes, the way Maria does.",
-    vendor: "Watch: Maria always opens the delivery history before choosing. Then the choice is yours.",
+  watch: (expert) => ({
+    quotes: `Watch: I'll ask the vendors for quotes, the way ${expert} does.`,
+    vendor: `Watch: ${expert} always opens the delivery history before choosing. Then the choice is yours.`,
     scoring: "Watch: each vendor gets a score in the shared sheet.",
-    approval: "Watch: this one goes to the CFO, like Maria does it.",
+    approval: `Watch: I'll route the approval the way ${expert} does it.`,
     po: "Watch: once it's approved, issue the purchase order.",
-  },
+  }),
   or: "or",
 };
 
@@ -83,7 +83,7 @@ const ES: Phrases = {
   whenDid: (expert, subject) => `Cuando ${expert} hizo esto para "${subject}",`,
   chose: (expert, what) => `${expert} eligió ${what}.`,
   choseTo: (label) => lcfirst(label),
-  reason: (text) => `Su motivo, en sus palabras: "${text}"`,
+  reason: (expert, text) => `El motivo de ${expert}, en sus palabras: "${text}"`,
   understanding: (text) => `Lo que yo entiendo: "${text}"`,
   guess: (expert) => ` Es mi mejor suposición; ${expert} no lo ha confirmado.`,
   noReason: (expert) => `${expert} no dijo por qué.`,
@@ -96,13 +96,13 @@ const ES: Phrases = {
     `Para comparar proveedores, ${expert} usa esto: "${text}". No está escrito en ningún sitio; ${expert} lo aprendió de un compañero, así que recuérdalo.`,
   knowledgeFound: (expert, text, source) => `Para comparar proveedores, ${expert} usa esto: "${text}". Lo encontrarás en: ${lcfirst(source)}.`,
   notSeen: (expert) => `${expert} no hizo ese paso en la sesión que observé, así que todavía no lo sé.`,
-  watch: {
-    quotes: "Mira: voy a pedir presupuestos a los proveedores, como lo hace Maria.",
-    vendor: "Mira: Maria siempre abre el historial de entregas antes de elegir. Luego la decisión es tuya.",
+  watch: (expert) => ({
+    quotes: `Mira: voy a pedir presupuestos a los proveedores, como lo hace ${expert}.`,
+    vendor: `Mira: ${expert} siempre abre el historial de entregas antes de elegir. Luego la decisión es tuya.`,
     scoring: "Mira: cada proveedor recibe una puntuación en la hoja compartida.",
-    approval: "Mira: esta va al director financiero, como lo hace Maria.",
+    approval: `Mira: voy a enviar la aprobación como lo hace ${expert}.`,
     po: "Mira: una vez aprobada, emite la orden de compra.",
-  },
+  }),
   or: "o",
 };
 
@@ -110,8 +110,8 @@ const ES: Phrases = {
 const ES_OPTIONS: Record<string, string> = {
   three_quotes: "pedir 3 o más presupuestos",
   fewer_quotes: "pedir menos de 3 presupuestos",
-  self: "aprobarlo ella misma",
-  manager: "enviarlo a su jefa",
+  self: "aprobarlo personalmente",
+  manager: "enviarlo a su responsable",
   cfo: "enviarlo al director financiero",
   issue: "emitir la orden de compra después de la aprobación",
   score: "puntuar a los proveedores en la hoja compartida",
@@ -138,7 +138,7 @@ function reasonSentence(card: DecisionCard, expert: string, lang: Lang): string 
   const p = phrases(lang);
   const r = card.reason;
   if (!r) return p.noReason(expert);
-  if (r.source === "expert") return p.reason(r.text);
+  if (r.source === "expert") return p.reason(expert, r.text);
   return `${p.understanding(r.text)}${r.confirmed ? "" : p.guess(expert)}`;
 }
 
@@ -222,7 +222,7 @@ export function showMe(stepId: StepId, requestId: string, quotedVendorIds: strin
     approval: [click("nav-approvals"), click(`route-${chosenApproval}`)],
     po: [click("nav-approvals"), click("issue-po")],
   };
-  return { actions: actions[stepId], narration: phrases(lang).watch[stepId] };
+  return { actions: actions[stepId], narration: phrases(lang).watch(lessons.expert)[stepId] };
 }
 
 // The guardrail an action would break, if any.

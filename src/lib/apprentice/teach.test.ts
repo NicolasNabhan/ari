@@ -44,7 +44,7 @@ describe("teach mode", () => {
 
   it("includes Maria's how-notes in the explanation", () => {
     const { effects } = run(chairsToVendor, ruleJudge);
-    expect(explanations(effects)[2].text).toContain("she opened Apex Tech's delivery history before deciding");
+    expect(explanations(effects)[2].text).toContain("opened Apex Tech's delivery history before deciding");
   });
 
   it("calls out the unwritten must-follow rule at the approval step", () => {

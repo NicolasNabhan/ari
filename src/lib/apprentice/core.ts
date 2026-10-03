@@ -263,9 +263,12 @@ function confirmGuess(out: Out, cardId: string): Out {
   return putCard(out, { ...card, reason: { ...card.reason, confirmed: true } });
 }
 
-function correctGuess(out: Out, cardId: string, text: string): Out {
+function correctGuess(out: Out, cardId: string, spoken: string): Out {
   const card = out.state.cards[cardId];
   if (!card) return out;
+  // "No, it's because…" → "It's because…"
+  const stripped = spoken.replace(/^\s*(no|nope|nah|not quite)\b[,.!]?\s*/i, "");
+  const text = stripped ? stripped.charAt(0).toUpperCase() + stripped.slice(1) : spoken;
   out = putCard(out, { ...card, reason: { source: "expert", text, types: card.reason?.types ?? [], evidence: [] } });
   return judge(out, card.id, { kind: "classify", card, answer: text, context: context(out.state, card.requestId) });
 }

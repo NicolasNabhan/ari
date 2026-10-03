@@ -29,17 +29,17 @@ export function howNotes(card: DecisionCard, cards: DecisionCard[], history: Tim
   const last = before[before.length - 1];
   if (last && card.at - last.at >= LONG_PAUSE_MS) notes.push(`Paused ${Math.round((card.at - last.at) / 1000)}s before choosing`);
 
-  // 2. What she checked first.
+  // 2. What the expert checked first.
   for (const { event, at } of history) {
     if (at <= windowStart || at >= card.at) continue;
     let note: string | null = null;
     if (event.type === "delivery_history_opened") note = `Opened ${vendor(event.vendorId)?.name}'s delivery history before deciding`;
     if (event.type === "screen_opened" && event.screen === "procedure") note = "Checked the written procedure before deciding";
-    if (event.type === "screen_opened" && event.screen === "scoring") note = "Looked at the scoring sheet before deciding";
+    if (event.type === "screen_opened" && event.screen === "scoring" && card.stepId !== "scoring") note = "Looked at the scoring sheet before deciding";
     if (note && !notes.includes(note)) notes.push(note);
   }
 
-  // 3. Who she contacted after this decision, before the next one.
+  // 3. Who the expert contacted after this decision, before the next one.
   for (const { event, at } of history) {
     if (event.type !== "message_sent" || at < card.at || at >= nextCardAt) continue;
     const p = person(event.to);

@@ -4,10 +4,12 @@
 
 **Blocked by:** 06, 08
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Start page with both modes, 'Learn from Maria' first
-- [ ] Preloaded Maria session recorded from a real run and shipped as a static file
-- [ ] Guided mode: prefilled profile, script cards for each demo moment
-- [ ] Off-script actions get real reactions (not canned)
-- [ ] Ending a guided session hands off to teach mode with the judge's own session
+- [x] Start page with both modes, 'Learn from Maria' first
+- [x] Preloaded Maria session recorded from a real run and shipped as a static file
+- [x] Guided mode: prefilled profile, script cards for each demo moment
+- [x] Off-script actions get real reactions (not canned)
+- [x] Ending a guided session hands off to teach mode with the judge's own session
+
+**Notes:** Preloaded session = src/lib/apprentice/mariaRecorded.json, captured from a real guided run in the browser (rule Judge). The hand-written mariaSession.ts stays as the test fixture. Guardrails are derived from the expert's must-follow approval answers (lessons.ts). Teaching wording made gender-neutral ("Maria's reason", no she/her).

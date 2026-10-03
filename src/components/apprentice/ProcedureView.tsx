@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { MARIA_SESSION } from "@/lib/apprentice/mariaSession";
 import { compileProcedure } from "@/lib/apprentice/procedure";
+import type { Lessons } from "@/lib/apprentice/types";
 
-// What Ari compiled from Maria's session: the step-by-step playbook the tutor follows.
-export function ProcedureView() {
+// What Ari compiled from the expert's session: the playbook the tutor follows.
+export function ProcedureView({ lessons }: { lessons: Lessons }) {
   const [open, setOpen] = useState(false);
-  const procedure = compileProcedure(MARIA_SESSION);
+  const procedure = compileProcedure(lessons);
   return (
     <>
       <button data-ari="view-procedure" onClick={() => setOpen(true)} className="text-xs text-indigo-600 underline dark:text-indigo-300">

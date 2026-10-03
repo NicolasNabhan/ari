@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useAri } from "@/components/ari/AriProvider";
 import { initialState, reduce } from "@/lib/apprentice/core";
 import { ruleJudge } from "@/lib/apprentice/ruleJudge";
-import { MARIA_SESSION } from "@/lib/apprentice/mariaSession";
-import type { CoreEffect, CoreInput, DecisionCard, JudgeCall, JudgeResult, Lang, Mode, StepId, TodayTask } from "@/lib/apprentice/types";
+import { lessonsFrom } from "@/lib/apprentice/lessons";
+import type { CoreEffect, CoreInput, DecisionCard, JudgeCall, JudgeResult, Lang, Lessons, Mode, StepId, TodayTask } from "@/lib/apprentice/types";
 import type { EventBus, WorkspaceEvent } from "@/lib/workspace/events";
 import { highlight, clearHighlight } from "./highlight";
 import { driveCursor } from "./ghostCursor";
@@ -28,7 +28,9 @@ async function judge(call: JudgeCall): Promise<JudgeResult> {
 
 // Runs the Apprentice Core in the browser: workspace events and speech in,
 // cards, questions and avatar moves out.
-export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode, started: boolean) {
+export const MY_LESSONS_KEY = "ari.lessons.mine";
+
+export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode, started: boolean, lessons?: Lessons) {
   const ari = useAri();
   const ariRef = useRef(ari);
   useEffect(() => {
@@ -41,6 +43,7 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
   const [questionWaiting, setQuestionWaiting] = useState(false);
   const [reviewList, setReviewList] = useState<string[] | null>(null);
   const [ended, setEnded] = useState(false);
+  const endedRef = useRef(false);
   const [tapToHear, setTapToHearState] = useState(false);
   const tapRef = useRef(false);
   useEffect(() => {
@@ -70,10 +73,21 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
     }
     dispatchRef.current = dispatch;
 
+    // Keep what this person taught Ari, so Ari can teach it back.
+    function saveLessons() {
+      const learned = lessonsFrom(state.current);
+      try {
+        if (learned) localStorage.setItem(MY_LESSONS_KEY, JSON.stringify(learned));
+      } catch {
+        // storage blocked: the hand-off just won't have this session
+      }
+    }
+
     function handle(effect: CoreEffect) {
       switch (effect.kind) {
         case "upsert_card":
           setCards(state.current.cardOrder.map((id) => state.current.cards[id]));
+          if (endedRef.current) saveLessons(); // a late answer from the Judge after the session ended
           break;
         case "judge_request":
           judge(effect.call).then((result) => dispatch({ kind: "judge_result", requestId: effect.requestId, result }));
@@ -108,11 +122,14 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
         case "show_review_list":
           setReviewList(effect.cardIds);
           break;
-        case "session_ended":
+        case "session_ended": {
           setReviewList(null);
           setEnded(true);
+          endedRef.current = true;
+          saveLessons();
           ariRef.current.say("Thanks, that's everything. I'll remember it for the next person.");
           break;
+        }
         case "end_review_item":
         case "ask":
           setQuestionWaiting(false);
@@ -126,8 +143,9 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
     }
 
     state.current = initialState();
+    endedRef.current = false;
     dispatch({ kind: "set_tap_to_hear", on: tapRef.current });
-    dispatch({ kind: "session_start", profile, mode, lessons: mode === "newcomer" ? MARIA_SESSION : undefined });
+    dispatch({ kind: "session_start", profile, mode, lessons: mode === "newcomer" ? lessons : undefined });
     const unsubscribe = bus.subscribe(({ event, at }) => {
       clearHighlight();
       dispatch({ kind: "workspace_event", event, at });
@@ -138,7 +156,7 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
       clearHighlight();
       unsubscribe();
     };
-  }, [bus, profile, mode, started]);
+  }, [bus, profile, mode, started, lessons]);
 
   // Before an action happens: false means Ari warned and the action should wait.
   function allow(event: WorkspaceEvent): boolean {

@@ -18,7 +18,7 @@ export type CompiledProcedure = { name: string; steps: { title: string; instruct
 function reasonLine(card: DecisionCard): string | null {
   const r = card.reason;
   if (!r) return null;
-  const label = { must: isUnwritten(card) ? "MUST FOLLOW (unwritten)" : "MUST FOLLOW", advice: "STRONG ADVICE", choice: "YOUR CHOICE (her style)", unknown: "REASON" }[
+  const label = { must: isUnwritten(card) ? "MUST FOLLOW (unwritten)" : "MUST FOLLOW", advice: "STRONG ADVICE", choice: "YOUR CHOICE (personal style)", unknown: "REASON" }[
     levelOf(r.types)
   ];
   return `${label}: ${r.text}${r.source === "ari" && !r.confirmed ? " (Ari's guess, not confirmed)" : ""}`;

@@ -57,7 +57,7 @@ describe("end-of-session review", () => {
     const { cards } = run([...session, end, say("Yes"), say("Yes, that's right"), say("No, I just trust Apex for laptops.")], quietJudge);
     const byStep = Object.fromEntries(cards.map((c) => [c.stepId, c]));
     expect(byStep.scoring.reason).toMatchObject({ source: "ari", confirmed: true });
-    expect(byStep.vendor.reason).toMatchObject({ source: "expert", text: "No, I just trust Apex for laptops." });
+    expect(byStep.vendor.reason).toMatchObject({ source: "expert", text: "I just trust Apex for laptops." });
     expect(byStep.quotes.reason!.confirmed).toBeFalsy(); // never reviewed
   });
 

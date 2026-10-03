@@ -59,6 +59,7 @@ const KEYWORDS: [RegExp, string][] = [
   [/cheap|budget|cost|expensive/i, "Budget"],
   [/safe|risk|careful/i, "Risk avoidance"],
   [/prefer|like (them|it)|my style|just feel|taste/i, "Personal preference"],
+  [/habit|just how i do it/i, "Habit"],
 ];
 
 const SOURCES: [RegExp, KnowledgeSource][] = [

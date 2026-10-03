@@ -1,6 +1,9 @@
-// Maria's laptop session, written by hand so teach mode works on its own.
-// (Ticket 13 replaces it with a session recorded from a real run.)
+// Maria's laptop session, written by hand: a stable fixture for the teach-mode
+// tests. The app teaches from MARIA_RECORDED, a session captured from a real run.
+import recorded from "./mariaRecorded.json";
 import type { Lessons } from "./types";
+
+export const MARIA_RECORDED = recorded as Lessons;
 
 const card = (c: Omit<Lessons["cards"][number], "requestId" | "previousChoices" | "id"> & { previousChoices?: string[] }) => ({
   id: `req-laptops:${c.stepId}`,
@@ -101,7 +104,7 @@ export const MARIA_SESSION: Lessons = {
       prediction: { optionId: "issue", correct: true },
       reason: {
         source: "ari",
-        text: "She tells the requester herself as soon as the PO goes out. That's her own habit.",
+        text: "Maria tells the requester personally as soon as the PO goes out. That's a personal habit.",
         types: ["Personal preference"],
         evidence: ["messaged Tom Reyes right after"],
         confidence: 0.74,
