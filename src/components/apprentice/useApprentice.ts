@@ -5,9 +5,10 @@ import { useAri } from "@/components/ari/AriProvider";
 import { initialState, reduce } from "@/lib/apprentice/core";
 import { ruleJudge } from "@/lib/apprentice/ruleJudge";
 import { MARIA_SESSION } from "@/lib/apprentice/mariaSession";
-import type { CoreEffect, CoreInput, DecisionCard, JudgeCall, JudgeResult, Mode, StepId, TodayTask } from "@/lib/apprentice/types";
+import type { CoreEffect, CoreInput, DecisionCard, JudgeCall, JudgeResult, Lang, Mode, StepId, TodayTask } from "@/lib/apprentice/types";
 import type { EventBus, WorkspaceEvent } from "@/lib/workspace/events";
 import { highlight, clearHighlight } from "./highlight";
+import { driveCursor } from "./ghostCursor";
 import type { Profile } from "@/lib/workspace/profile";
 
 // Claude when the server has a key; the rule Judge otherwise (or on any error).
@@ -53,6 +54,8 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
     }
   }, []);
   const dispatchRef = useRef<(input: CoreInput) => CoreEffect[]>(() => []);
+  const langRef = useRef<Lang>("en-US");
+  const [lang, setLang] = useState<Lang>("en-US");
 
   useEffect(() => {
     if (!profile || !started) return;
@@ -84,12 +87,20 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
         case "teach_explain":
           if (effect.stepId) setTeachingStep(effect.stepId);
           if (effect.highlight) highlight(effect.highlight);
-          ariRef.current.say(effect.text);
+          ariRef.current.say(effect.text, effect.lang ?? langRef.current);
           break;
         case "warn_guardrail":
           clearHighlight();
           ariRef.current.setState("forward");
-          ariRef.current.say(effect.text).then(() => ariRef.current.setState("tutor"));
+          ariRef.current.say(effect.text, langRef.current).then(() => ariRef.current.setState("tutor"));
+          break;
+        case "drive_cursor":
+          clearHighlight();
+          driveCursor(effect.actions);
+          break;
+        case "switch_language":
+          langRef.current = effect.lang;
+          setLang(effect.lang);
           break;
         case "signal_pending_question":
           setQuestionWaiting(true);
@@ -135,8 +146,12 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
   }
 
   async function askWhy() {
-    const heard = await ariRef.current.listen();
-    dispatchRef.current({ kind: "utterance", speaker: "newcomer", text: heard, lang: "en-US", at: Date.now() });
+    const heard = await ariRef.current.listen(langRef.current);
+    dispatchRef.current({ kind: "utterance", speaker: "newcomer", text: heard, lang: langRef.current, at: Date.now() });
+  }
+
+  function showMe() {
+    dispatchRef.current({ kind: "command", name: "show_me" });
   }
 
   function setTapToHear(on: boolean) {
@@ -169,5 +184,5 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
     },
   };
 
-  return { cards, task, teachingStep, allow, askWhy, tapToHear, setTapToHear, questionWaiting, hearQuestion, review };
+  return { cards, task, teachingStep, allow, askWhy, showMe, lang, tapToHear, setTapToHear, questionWaiting, hearQuestion, review };
 }

@@ -2,6 +2,10 @@ import type { TimedEvent, WorkspaceEvent } from "@/lib/workspace/events";
 import type { Profile } from "@/lib/workspace/profile";
 
 export type Mode = "expert" | "newcomer";
+export type Lang = "en-US" | "es-ES";
+
+// One move of Ari's own cursor in "show me": point at, or click, an element.
+export type CursorAction = { target: string; action: "point" | "click" };
 
 // How an option relates to the written procedure.
 //  procedure: what the procedure says to do
@@ -49,6 +53,7 @@ export type Guardrail = {
   id: string;
   text: string; // the rule, in plain words
   warning: string; // what Ari says when someone is about to break it
+  warningEs?: string;
   step: StepId;
   requiredOption: string;
   minAmount: number; // applies to purchases over this amount
@@ -117,7 +122,9 @@ export type CoreEffect =
   | { kind: "end_review_item"; cardId: string; text: string } // read one guess aloud, then listen
   | { kind: "show_review_list"; cardIds: string[] } // least certain first
   | { kind: "session_ended" }
-  | { kind: "teach_explain"; text: string; highlight?: string; stepId?: StepId }
+  | { kind: "teach_explain"; text: string; highlight?: string; stepId?: StepId; lang?: Lang }
+  | { kind: "drive_cursor"; actions: CursorAction[] }
+  | { kind: "switch_language"; lang: Lang }
   | { kind: "warn_guardrail"; text: string; ruleId: string };
 
 export type CoreState = {
@@ -139,6 +146,7 @@ export type CoreState = {
   pendingTap: { cardId: string | null; text: string } | null;
   followedUp: string[]; // cards Ari already asked one follow-up about
   review: Review | null;
+  lang: Lang;
   nextRequestId: number;
 };
 

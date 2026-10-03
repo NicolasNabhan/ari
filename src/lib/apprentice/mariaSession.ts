@@ -115,6 +115,7 @@ export const MARIA_SESSION: Lessons = {
       id: "new-supplier-cfo",
       text: "New suppliers over $25k go to the CFO first.",
       warning: "Wait. New suppliers over $25k go to the CFO first. That's Maria's rule.",
+      warningEs: "Espera. Los proveedores nuevos de más de 25.000 dólares van primero al director financiero. Es la regla de Maria.",
       step: "approval",
       requiredOption: "cfo",
       minAmount: 25_000,

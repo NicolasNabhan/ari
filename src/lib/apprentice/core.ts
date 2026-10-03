@@ -4,7 +4,7 @@
 import { northwind } from "@/lib/northwind/seed";
 import { howNotes } from "./howNotes";
 import { choiceFor, nextStepAfter, request, type Step } from "./normalMap";
-import { answerWhy, brokenGuardrail, explainStep, intro, isWhyQuestion } from "./teach";
+import { answerWhy, brokenGuardrail, explainStep, intro, isSpanish, isWhyQuestion, showMe } from "./teach";
 import type { CoreEffect, CoreInput, CoreState, DecisionCard, JudgeCall, JudgeContext, Review, StepId, TodayTask } from "./types";
 
 // Ari stays quiet only when it's at least this sure of its own explanation.
@@ -33,6 +33,7 @@ export function initialState(): CoreState {
     pendingTap: null,
     followedUp: [],
     review: null,
+    lang: "en-US",
   };
 }
 
@@ -140,10 +141,10 @@ function teachOnEvent(state: CoreState): Out {
   const event = state.events[state.events.length - 1].event;
   const step = STEP_AFTER[event.type];
   if (!state.lessons || !step || state.taught.includes(step)) return { state, effects: [] };
-  const { text, highlight } = explainStep(step, state.lessons, quotedVendorIds(state));
+  const { text, highlight } = explainStep(step, state.lessons, quotedVendorIds(state), state.lang);
   return {
     state: { ...state, taught: [...state.taught, step] },
-    effects: [{ kind: "teach_explain", text, highlight, stepId: step }],
+    effects: [{ kind: "teach_explain", text, highlight, stepId: step, lang: state.lang }],
   };
 }
 
@@ -286,8 +287,25 @@ function onReviewAnswer(state: CoreState, text: string): Out {
   }
 }
 
+function currentRequestId(state: CoreState): string | null {
+  for (let i = state.events.length - 1; i >= 0; i--) {
+    const e = state.events[i].event;
+    if (e.type === "request_opened") return e.requestId;
+  }
+  return null;
+}
+
+function onShowMe(state: CoreState): Out {
+  const step = state.taught[state.taught.length - 1];
+  const requestId = currentRequestId(state);
+  if (!state.lessons || !step || !requestId) return { state, effects: [] };
+  const { actions, narration } = showMe(step, requestId, quotedVendorIds(state), state.lessons, state.lang);
+  return { state, effects: [{ kind: "teach_explain", text: narration, stepId: step, lang: state.lang }, { kind: "drive_cursor", actions }] };
+}
+
 function onCommand(state: CoreState, name: Extract<CoreInput, { kind: "command" }>["name"]): Out {
   const out: Out = { state, effects: [] };
+  if (name === "show_me") return state.mode === "newcomer" ? onShowMe(state) : out;
   if (state.mode !== "expert") return out;
   if (name === "review_skip") return endSession(out);
   if (name !== "end_session") return out;
@@ -308,9 +326,18 @@ function onListAction(state: CoreState, input: Extract<CoreInput, { kind: "revie
 function onUtterance(state: CoreState, input: Extract<CoreInput, { kind: "utterance" }>): Out {
   if (state.review && state.openQuestion?.cardId === REVIEW && input.speaker === "expert") return onReviewAnswer(state, input.text);
   if (state.mode === "newcomer") {
-    if (input.speaker !== "newcomer" || !state.lessons || !isWhyQuestion(input.text)) return { state, effects: [] };
-    const current = state.taught[state.taught.length - 1] ?? null;
-    return { state, effects: [{ kind: "teach_explain", text: answerWhy(input.text, state.lessons, current), stepId: current ?? undefined }] };
+    if (input.speaker !== "newcomer" || !state.lessons) return { state, effects: [] };
+    const effects: CoreEffect[] = [];
+    let next = state;
+    const lang = input.lang.startsWith("es") || isSpanish(input.text) ? "es-ES" : "en-US";
+    if (lang !== state.lang) {
+      next = { ...state, lang };
+      effects.push({ kind: "switch_language", lang });
+    }
+    if (!isWhyQuestion(input.text)) return { state: next, effects };
+    const current = next.taught[next.taught.length - 1] ?? null;
+    effects.push({ kind: "teach_explain", text: answerWhy(input.text, next.lessons!, current, lang), stepId: current ?? undefined, lang });
+    return { state: next, effects };
   }
   const question = state.openQuestion;
   if (input.speaker !== "expert" || !question) return { state, effects: [] };
@@ -399,7 +426,7 @@ export function reduce(state: CoreState, input: CoreInput): Out {
       if (state.warned.includes(key)) return { state, effects: [] }; // they heard the warning and chose to go ahead
       return {
         state: { ...state, warned: [...state.warned, key] },
-        effects: [{ kind: "warn_guardrail", text: rule.warning, ruleId: rule.id }],
+        effects: [{ kind: "warn_guardrail", text: state.lang === "es-ES" ? rule.warningEs ?? rule.warning : rule.warning, ruleId: rule.id }],
       };
     }
     case "utterance":

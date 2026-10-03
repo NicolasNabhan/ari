@@ -19,6 +19,7 @@ import { DecisionCards } from "@/components/apprentice/DecisionCards";
 import { useApprentice } from "@/components/apprentice/useApprentice";
 import { useRecording } from "@/lib/workspace/useRecording";
 import { ReviewList } from "@/components/apprentice/ReviewList";
+import { ProcedureView } from "@/components/apprentice/ProcedureView";
 import { AriProvider } from "@/components/ari/AriProvider";
 
 export function Workspace({ audience }: { audience: Audience }) {
@@ -56,7 +57,7 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
   const [callWith, setCallWith] = useState<string | null>(null);
   const [showLog, setShowLog] = useState(false);
   const [started, setStarted] = useState(false);
-  const { cards, task, teachingStep, allow, askWhy, tapToHear, setTapToHear, questionWaiting, hearQuestion, review } = useApprentice(
+  const { cards, task, teachingStep, allow, askWhy, showMe, lang, tapToHear, setTapToHear, questionWaiting, hearQuestion, review } = useApprentice(
     bus,
     profile,
     audience,
@@ -249,10 +250,16 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
           {teaching ? (
             <>
               {started && (
-                <button data-ari="ask-why" onClick={askWhy} className="w-full rounded-lg border border-indigo-300 px-3 py-2 text-sm font-medium text-indigo-700 dark:border-indigo-800 dark:text-indigo-300">
-                  Ask Ari &ldquo;why?&rdquo;
-                </button>
+                <div className="flex gap-2">
+                  <button data-ari="ask-why" onClick={askWhy} className="flex-1 rounded-lg border border-indigo-300 px-3 py-2 text-sm font-medium text-indigo-700 dark:border-indigo-800 dark:text-indigo-300">
+                    {lang === "es-ES" ? "Pregúntale a Ari «¿por qué?»" : <>Ask Ari &ldquo;why?&rdquo;</>}
+                  </button>
+                  <button data-ari="show-me" onClick={showMe} className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white">
+                    {lang === "es-ES" ? "Muéstramelo" : "Show me"}
+                  </button>
+                </div>
               )}
+              <ProcedureView />
               <DecisionCards title={`${MARIA_SESSION.expert}'s playbook`} cards={MARIA_SESSION.cards} activeStep={teachingStep} />
             </>
           ) : (
