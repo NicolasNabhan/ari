@@ -6,9 +6,11 @@
 
 **Status:** ready-for-agent
 
-- [ ] New dedicated public GitHub repo created; app runs locally and on a Vercel URL
-- [ ] A server route hands out a short-lived ElevenLabs session token; no API key reaches the browser
+- [ ] New dedicated public GitHub repo created; app runs locally and on a Vercel URL *(repo + local done: github.com/NicolasNabhan/ari; Vercel URL pending — needs the user's Vercel account)*
+- [x] A server route hands out a short-lived ElevenLabs session token; no API key reaches the browser
 - [ ] The agent stays silent until our code tells it to speak, then says the given line
 - [ ] The user's spoken reply is transcribed and shown on screen
-- [ ] The agent session limit is raised above the 10-minute default
-- [ ] Placeholder start page has two buttons: "Learn from Maria" and "Teach Ari as Maria"
+- [x] The agent session limit is raised above the 10-minute default
+- [x] Placeholder start page has two buttons: "Learn from Maria" and "Teach Ari as Maria"
+
+**Progress note:** code is done and committed (voice-check page, token route, agent setup script raising the limit to 30 min). Still to verify with real keys: the agent staying silent until triggered, and the spoken reply transcribed. Blocked on the user adding ELEVENLABS_API_KEY to .env.local and importing the repo in Vercel.
