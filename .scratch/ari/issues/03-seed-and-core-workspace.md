@@ -4,11 +4,11 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Profile screen saves name / role / company in the browser and is remembered on reload
-- [ ] Inbox shows the laptop request; opening it lands in the request queue
-- [ ] Vendors screen shows quotes and an openable delivery history per vendor
-- [ ] Requesting quotes, selecting a vendor and switching vendor all work
-- [ ] Each action emits a named, typed event with a timestamp, visible in the debug event log
-- [ ] All Northwind content comes from the seed file, with the planted facts present (A's late deliveries, procedure thresholds)
+- [x] Profile screen saves name / role / company in the browser and is remembered on reload
+- [x] Inbox shows the laptop request; opening it lands in the request queue
+- [x] Vendors screen shows quotes and an openable delivery history per vendor
+- [x] Requesting quotes, selecting a vendor and switching vendor all work
+- [x] Each action emits a named, typed event with a timestamp, visible in the debug event log
+- [x] All Northwind content comes from the seed file, with the planted facts present (A's late deliveries, procedure thresholds)

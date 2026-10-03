@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] New dedicated public GitHub repo created; app runs locally and on a Vercel URL *(repo + local done: github.com/NicolasNabhan/ari; Vercel URL pending — needs the user's Vercel account)*
 - [x] A server route hands out a short-lived ElevenLabs session token; no API key reaches the browser
@@ -14,3 +14,5 @@
 - [x] Placeholder start page has two buttons: "Learn from Maria" and "Teach Ari as Maria"
 
 **Progress note:** code is done and committed (voice-check page, token route, agent setup script raising the limit to 30 min). Still to verify with real keys: the agent staying silent until triggered, and the spoken reply transcribed. Blocked on the user adding ELEVENLABS_API_KEY to .env.local and importing the repo in Vercel.
+
+**Closed for building (user decision 2026-10-03):** dependents may proceed. Still to verify once credits/accounts exist: real ElevenLabs voice loop, and the Vercel URL.
