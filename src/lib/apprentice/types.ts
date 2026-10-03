@@ -24,10 +24,16 @@ export type DecisionCard = {
   previousChoices: string[];
   prediction?: { optionId: string; correct: boolean };
   reason?: Reason;
+  knowledge?: KnowledgeItem[];
   question?: string; // what Ari asked, if it asked
   howNotes: string[];
   at: number; // time of the first choice
 };
+
+export type KnowledgeSource = "Online or public" | "Company document" | "Company system" | "Told by a person" | "Already a given";
+
+// Something the work depends on, and where the next person can find it.
+export type KnowledgeItem = { text: string; source: KnowledgeSource };
 
 export type Reason = {
   source: "expert" | "ari"; // 🗣 Maria said it / 🤖 Ari's own explanation
@@ -84,7 +90,7 @@ export type JudgeResult =
       types: string[];
     }
   // followUp: one gentle question when the answer is vague in a way that matters
-  | { kind: "classify"; types: string[]; summary: string; followUp?: string };
+  | { kind: "classify"; types: string[]; summary: string; followUp?: string; knowledge?: KnowledgeItem[] };
 
 export type TodayTask = { text: string; requestId: string | null };
 

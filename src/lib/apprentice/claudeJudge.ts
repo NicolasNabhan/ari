@@ -54,9 +54,16 @@ const Assess = z.object({
   question: z.string().describe("If Ari should ask: one short spoken question, under 15 words, naming the alternative. Otherwise empty."),
   types: z.array(z.enum(REASON_TYPE_NAMES as [string, ...string[]])),
 });
+const SOURCES = ["Online or public", "Company document", "Company system", "Told by a person", "Already a given"] as const;
 const Classify = z.object({
   types: z.array(z.enum(REASON_TYPE_NAMES as [string, ...string[]])).describe("One or more reason types that fit the answer"),
   summary: z.string().describe("The reason in one short sentence, in the expert's words where possible"),
+  followUp: z
+    .string()
+    .describe("Only if the answer is vague in a way that matters to the next person (e.g. could be experience or taste): one gentle question under 15 words. Otherwise empty."),
+  knowledge: z
+    .array(z.object({ text: z.string(), source: z.enum(SOURCES) }))
+    .describe("Knowledge the work depends on that this answer reveals (formulas, data sources, know-how), and where the next person can find it. Empty if none."),
 });
 
 async function ask<T extends z.ZodType>(schema: T, prompt: string): Promise<z.infer<T>> {
@@ -87,7 +94,7 @@ export async function claudeJudge(call: JudgeCall): Promise<JudgeResult> {
     case "assess": {
       const r = await ask(
         Assess,
-        `${situation(call.context)}\n\nNew decision: ${describe(call.card)}\nCan Ari explain this choice itself from what it knows? Only claim high confidence if the evidence really explains it. A choice can be usual and still unexplained (e.g. picking between two equally fine options).`,
+        `${situation(call.context)}\n\nNew decision: ${describe(call.card)}\nCan Ari explain this choice itself from what it knows? Only claim high confidence if the evidence really explains it. A choice can be usual and still unexplained (e.g. picking between two equally fine options). If the decision is a number the expert typed (like a vendor score), the question is where that number comes from and what knowledge produces it.`,
       );
       return { kind: "assess", ...r, confidence: Math.max(0, Math.min(1, r.confidence)) };
     }
@@ -96,7 +103,7 @@ export async function claudeJudge(call: JudgeCall): Promise<JudgeResult> {
         Classify,
         `${situation(call.context)}\n\nAri asked about: ${describe(call.card)}\nThe expert answered: "${call.answer}"\nSort the answer into reason types.`,
       );
-      return { kind: "classify", ...r };
+      return { kind: "classify", types: r.types, summary: r.summary, followUp: r.followUp || undefined, knowledge: r.knowledge.length ? r.knowledge : undefined };
     }
   }
 }

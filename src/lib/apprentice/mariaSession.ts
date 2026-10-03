@@ -56,6 +56,22 @@ export const MARIA_SESSION: Lessons = {
       at: 2,
     }),
     card({
+      stepId: "scoring",
+      title: "Score the vendors",
+      options: [{ id: "score", label: "Score vendors in the shared sheet", status: "allowed" }],
+      chosen: "score",
+      question: "Where does that number come from?",
+      reason: {
+        source: "expert",
+        text: "40% price, 60% delivery record. It's Finance's formula, nobody wrote it down.",
+        types: ["Company-specific method"],
+        evidence: [],
+      },
+      knowledge: [{ text: "Vendor score = 40% price + 60% delivery record (Finance's formula)", source: "Told by a person" }],
+      howNotes: [],
+      at: 2.5,
+    }),
+    card({
       stepId: "approval",
       title: "Approve $38,400",
       procedureRef: "§4",

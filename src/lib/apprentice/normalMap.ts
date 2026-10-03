@@ -58,6 +58,15 @@ export function approvalStep(requestId: string, amount: number): Step {
   };
 }
 
+export function scoringStep(requestId: string): Step {
+  return {
+    requestId,
+    stepId: "scoring",
+    title: "Score the vendors",
+    options: [{ id: "score", label: "Score vendors in the shared sheet", status: "allowed" }],
+  };
+}
+
 export function poStep(requestId: string): Step {
   return {
     requestId,
@@ -87,6 +96,8 @@ export function choiceFor(event: WorkspaceEvent, history: TimedEvent[]): { step:
       return { step: approvalStep(event.requestId, event.amount), chosen: event.to };
     case "po_issued":
       return { step: poStep(event.requestId), chosen: "issue" };
+    case "score_entered":
+      return { step: scoringStep(event.requestId), chosen: "score" };
     default:
       return null;
   }

@@ -4,10 +4,12 @@
 
 **Blocked by:** 06
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Reason types and default levels come from a data list; adding a type needs no code change
-- [ ] Core test: 'A shipped late twice; Friday is a hard deadline' → 🟡 lesson learned + deadline
-- [ ] Core test: sending the $38k order to the CFO triggers an ask; answer → 🔴 team convention + Unwritten
-- [ ] Core test: typing a vendor score triggers 'where does that number come from?'; answer tagged told by a person
-- [ ] Badge + small types + Unwritten ribbon + knowledge tags render on cards in both modes
+- [x] Reason types and default levels come from a data list; adding a type needs no code change
+- [x] Core test: 'A shipped late twice; Friday is a hard deadline' → 🟡 lesson learned + deadline
+- [x] Core test: sending the $38k order to the CFO triggers an ask; answer → 🔴 team convention + Unwritten
+- [x] Core test: typing a vendor score triggers 'where does that number come from?'; answer tagged told by a person
+- [x] Badge + small types + Unwritten ribbon + knowledge tags render on cards in both modes
+
+**Notes:** Added reason type 'Company-specific method' (must). Budget / Time or deadline / Resources default to strong advice (they belong to one request). Scoring is a step card; Ari asks once per request where the number comes from. Knowledge items (text + source) come from the classify Judge call; teach mode passes them on at the vendor step.

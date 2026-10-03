@@ -2,7 +2,7 @@
 // and nothing else about this expert, which is exactly when Ari should ask.
 // Used until the Claude-backed Judge is configured.
 import { quoteFor, vendor } from "@/lib/northwind/seed";
-import type { DecisionCard, JudgeCall, JudgeContext, JudgeResult } from "./types";
+import type { DecisionCard, JudgeCall, JudgeContext, JudgeResult, KnowledgeItem, KnowledgeSource } from "./types";
 
 const usd = (n: number) => `$${n.toLocaleString("en-US")}`;
 
@@ -42,6 +42,9 @@ function assess(card: DecisionCard, context: JudgeContext): Extract<JudgeResult,
         ? puzzled(`That goes against the procedure. Why approve it ${who === "yourself" ? "yourself" : `through ${who}`}?`)
         : puzzled(`The procedure doesn't require that${amount ? ` for ${usd(amount)}` : ""}. Why send it to ${who}?`);
     }
+    case "scoring":
+      // A typed number with no visible source: Ari can't know where it came from.
+      return puzzled("Where does that number come from?");
     default:
       return understood("Done as the procedure says.", card.procedureRef ? [`procedure ${card.procedureRef}`] : [], ["Company policy"], 0.95, false);
   }
@@ -52,10 +55,24 @@ const KEYWORDS: [RegExp, string][] = [
   [/deadline|friday|monday|urgent|asap|by (mon|tues|wednes|thurs|fri)day|in time/i, "Time or deadline"],
   [/always|rule|we never|has to|must|not written|unwritten/i, "Team convention"],
   [/polic(y|ies)|compan(y|ies) says|required/i, "Company policy"],
-  [/cheap|budget|cost|price|expensive/i, "Budget"],
+  [/formula|%|percent|weight(ed|ing)/i, "Company-specific method"],
+  [/cheap|budget|cost|expensive/i, "Budget"],
   [/safe|risk|careful/i, "Risk avoidance"],
   [/prefer|like (them|it)|my style|just feel|taste/i, "Personal preference"],
 ];
+
+const SOURCES: [RegExp, KnowledgeSource][] = [
+  [/textbook|course|online|google|website|youtube/i, "Online or public"],
+  [/manual|onboarding|handbook|procedure doc|written in/i, "Company document"],
+  [/system|database|drive|erp|spreadsheet tool/i, "Company system"],
+  [/everyone knows|obvious|basic/i, "Already a given"],
+  [/told|showed me|learned from|nobody wrote|not written|formula|finance|someone/i, "Told by a person"],
+];
+
+export function knowledgeFrom(answer: string): KnowledgeItem[] {
+  const source = SOURCES.find(([re]) => re.test(answer))?.[1] ?? "Told by a person";
+  return [{ text: answer, source }];
+}
 
 export function classifyAnswer(answer: string): string[] {
   const types = KEYWORDS.filter(([re]) => re.test(answer)).map(([, t]) => t);
@@ -79,7 +96,8 @@ export function ruleJudge(call: JudgeCall): JudgeResult {
       const followUp = vague
         ? `Is that from past experience${call.card.stepId === "vendor" ? " with them" : ""}, or personal taste?`
         : undefined;
-      return { kind: "classify", types, summary: call.answer, followUp };
+      const knowledge = call.card.stepId === "scoring" ? knowledgeFrom(call.answer) : undefined;
+      return { kind: "classify", types, summary: call.answer, followUp, knowledge };
     }
   }
 }

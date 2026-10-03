@@ -264,7 +264,7 @@ function onJudgeResult(state: CoreState, input: Extract<CoreInput, { kind: "judg
     }
     case "classify": {
       if (!card?.reason || card.reason.source !== "expert") return out;
-      out = putCard(out, { ...card, reason: { ...card.reason, types: result.types } });
+      out = putCard(out, { ...card, reason: { ...card.reason, types: result.types }, ...(result.knowledge ? { knowledge: result.knowledge } : {}) });
       if (!result.followUp || out.state.followedUp.includes(card.id)) return out;
       out = { ...out, state: { ...out.state, followedUp: [...out.state.followedUp, card.id] } };
       return ask(out, { cardId: card.id, text: result.followUp });

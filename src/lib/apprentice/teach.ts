@@ -67,6 +67,16 @@ export function explainStep(stepId: StepId, lessons: Lessons, quotedVendorIds: s
     if (level) parts.push(level);
     if (card.howNotes.length) parts.push(`How ${lessons.expert} worked: ${card.howNotes.map((n) => `she ${lcfirst(n)}`).join("; ")}.`);
   }
+  // Knowledge the step depends on, and where to find it (from any step).
+  if (stepId === "vendor") {
+    for (const item of lessons.cards.flatMap((c) => c.knowledge ?? [])) {
+      parts.push(
+        item.source === "Told by a person"
+          ? `To compare vendors, ${lessons.expert} uses this: ${item.text}. It isn't written down anywhere; ${lessons.expert} learned it from a colleague, so remember it.`
+          : `To compare vendors, ${lessons.expert} uses this: ${item.text}. You can find it in: ${lcfirst(item.source)}.`,
+      );
+    }
+  }
   const highlight: Partial<Record<StepId, string>> = {
     quotes: "go-to-vendors",
     vendor: quotedVendorIds[0] ? `history-${quotedVendorIds[0]}` : undefined,
@@ -77,6 +87,7 @@ export function explainStep(stepId: StepId, lessons: Lessons, quotedVendorIds: s
 }
 
 const STEP_WORDS: [RegExp, StepId][] = [
+  [/score|number|formula/i, "scoring"],
   [/quote/i, "quotes"],
   [/cfo|approv|manager|sign/i, "approval"],
   [/\bpo\b|purchase order|requester|tell/i, "po"],

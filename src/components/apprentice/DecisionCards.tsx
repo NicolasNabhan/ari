@@ -1,4 +1,13 @@
-import type { DecisionCard, OptionStatus, Reason } from "@/lib/apprentice/types";
+import { levelOf, type Level } from "@/lib/apprentice/reasonTypes";
+import { isUnwritten } from "@/lib/apprentice/teach";
+import type { DecisionCard, KnowledgeItem, OptionStatus, Reason } from "@/lib/apprentice/types";
+
+const LEVEL_BADGE: Record<Level, { label: string; className: string } | null> = {
+  must: { label: "🔴 MUST FOLLOW", className: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300" },
+  advice: { label: "🟡 STRONG ADVICE", className: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300" },
+  choice: { label: "🟢 YOUR CHOICE", className: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300" },
+  unknown: null,
+};
 
 const STATUS_NOTE: Record<OptionStatus, string> = {
   procedure: "per procedure",
@@ -28,6 +37,11 @@ export function DecisionCards({
               data-ari={`card-${card.stepId}`}
               className={`rounded-xl border bg-white p-3 text-sm shadow-sm dark:bg-zinc-900 ${card.stepId === activeStep ? "border-indigo-500 ring-2 ring-indigo-200 dark:ring-indigo-900" : "dark:border-zinc-800"}`}
             >
+              {isUnwritten(card) && (
+                <div data-ari="unwritten" className="-mx-3 -mt-3 mb-2 rounded-t-xl bg-red-600 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
+                  Unwritten rule · not in the procedure
+                </div>
+              )}
               <div className="flex items-start justify-between gap-2">
                 <span className="font-semibold">{card.title}</span>
                 {card.prediction && (
@@ -59,6 +73,7 @@ export function DecisionCards({
                 </p>
               )}
               {card.reason && <ReasonView reason={card.reason} />}
+              {card.knowledge && card.knowledge.length > 0 && <KnowledgeView items={card.knowledge} />}
               {card.reason?.source === "ari" && !card.reason.confirmed && (
                 <p className="mt-1 text-xs italic text-zinc-400">Ari&rsquo;s best guess, not confirmed</p>
               )}
@@ -86,7 +101,16 @@ function ReasonView({ reason }: { reason: Reason }) {
         <span title={fromExpert ? "Maria said this" : "Ari's own explanation"}>{fromExpert ? "🗣" : "🤖"}</span>{" "}
         {fromExpert ? <q>{reason.text}</q> : reason.text}
       </p>
-      {reason.types.length > 0 && <p className="mt-1 text-xs text-zinc-500">{reason.types.join(" · ")}</p>}
+      {reason.types.length > 0 && (
+        <div className="mt-1.5">
+          {LEVEL_BADGE[levelOf(reason.types)] && (
+            <span data-ari="level" className={`inline-block rounded px-1.5 py-0.5 text-xs font-bold ${LEVEL_BADGE[levelOf(reason.types)]!.className}`}>
+              {LEVEL_BADGE[levelOf(reason.types)]!.label}
+            </span>
+          )}
+          <p className="mt-0.5 text-xs text-zinc-500">{reason.types.map((t) => t.toLowerCase()).join(" · ")}</p>
+        </div>
+      )}
       {!fromExpert && reason.evidence.length > 0 && <p className="mt-1 text-xs text-zinc-500">Evidence: {reason.evidence.join("; ")}</p>}
       {!fromExpert && reason.confidence !== undefined && (
         <div className="mt-1 flex items-center gap-2 text-xs text-zinc-400" title="How sure Ari is">
@@ -96,6 +120,19 @@ function ReasonView({ reason }: { reason: Reason }) {
           {Math.round(reason.confidence * 100)}%
         </div>
       )}
+    </div>
+  );
+}
+
+function KnowledgeView({ items }: { items: KnowledgeItem[] }) {
+  return (
+    <div data-ari="knowledge" className="mt-2 rounded-lg bg-sky-50 p-2 text-xs dark:bg-sky-950">
+      <p className="font-semibold text-sky-800 dark:text-sky-300">Knowledge behind this</p>
+      {items.map((k) => (
+        <p key={k.text} className="mt-0.5">
+          📘 {k.text} <span className="whitespace-nowrap rounded bg-white px-1 text-sky-700 dark:bg-sky-900 dark:text-sky-200">{k.source}</span>
+        </p>
+      ))}
     </div>
   );
 }

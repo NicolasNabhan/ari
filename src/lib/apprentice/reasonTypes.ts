@@ -14,6 +14,7 @@ export const REASON_TYPES: { name: string; group: string; level: Level }[] = [
   { name: "Client or requester request", group: "Rules from the organization", level: "must" },
   { name: "Brand guidelines", group: "Rules from the organization", level: "must" },
   { name: "Team convention", group: "Rules from the organization", level: "must" },
+  { name: "Company-specific method", group: "Rules from the organization", level: "must" },
   { name: "Budget", group: "Practical constraints", level: "advice" },
   { name: "Time or deadline", group: "Practical constraints", level: "advice" },
   { name: "Resources", group: "Practical constraints", level: "advice" },

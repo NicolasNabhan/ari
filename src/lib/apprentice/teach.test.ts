@@ -35,6 +35,13 @@ describe("teach mode", () => {
     expect(vendor.text).toContain("strong advice");
   });
 
+  it("passes on knowledge that only lived in Maria's head, and where it comes from", () => {
+    const { effects } = run(chairsToVendor, ruleJudge);
+    const vendor = explanations(effects)[2].text;
+    expect(vendor).toContain("40% price + 60% delivery record");
+    expect(vendor).toContain("isn't written down anywhere");
+  });
+
   it("includes Maria's how-notes in the explanation", () => {
     const { effects } = run(chairsToVendor, ruleJudge);
     expect(explanations(effects)[2].text).toContain("she opened Apex Tech's delivery history before deciding");
