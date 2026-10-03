@@ -31,10 +31,10 @@ export function Approvals({
     <section className="space-y-4">
       <h1 className="text-xl font-semibold">Approval · {request.subject}</h1>
       <div className="rounded-xl border bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-        <dl className="grid grid-cols-3 gap-2 text-sm">
+        <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
           <div><dt className="text-zinc-500">Vendor</dt><dd className="font-medium">{vendor(vendorId)?.name}</dd></div>
           <div><dt className="text-zinc-500">Amount</dt><dd className="font-medium">{usd(amount)}</dd></div>
-          <div><dt className="text-zinc-500">Requested by</dt><dd>{request.due} deadline</dd></div>
+          <div><dt className="text-zinc-500">Due</dt><dd>{request.due}</dd></div>
         </dl>
         {route ? (
           <p className="mt-4 font-medium text-indigo-700 dark:text-indigo-300">{ROUTES.find((r) => r.to === route)!.done}</p>

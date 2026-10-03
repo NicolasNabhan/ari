@@ -4,10 +4,12 @@
 
 **Blocked by:** 07, 09, 10, 11, 12, 13
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Full-script replay test passes
-- [ ] README for judges: pitch, live link, how to try both modes, architecture, production path
-- [ ] Both judge modes walked end to end on the production Vercel URL
-- [ ] Fallback face and per-visit cap verified on the deployed app
-- [ ] (Optional) graph view toggle
+- [x] Full-script replay test passes
+- [x] README for judges: pitch, live link, how to try both modes, architecture, production path
+- [ ] Both judge modes walked end to end on the production Vercel URL *(pending: needs the Vercel import; both modes walked end to end locally, and `npm run build` passes)*
+- [ ] Fallback face and per-visit cap verified on the deployed app *(pending: deploy; the fallback face is what runs today)*
+- [ ] (Optional) graph view toggle *(skipped: cards read better in the demo)*
+
+**Closed for building:** remaining items need the user's Vercel deployment.
