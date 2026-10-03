@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { northwind } from "@/lib/northwind/seed";
-import type { Screen } from "@/lib/workspace/events";
+import { northwind, quoteFor } from "@/lib/northwind/seed";
+import type { ApprovalRoute, Screen } from "@/lib/workspace/events";
 import { EventBusProvider, useEventBus } from "@/lib/workspace/WorkspaceContext";
 import { loadProfile, MARIA, saveProfile, type Profile } from "@/lib/workspace/profile";
 import { ProfileForm } from "./ProfileForm";
@@ -10,6 +10,10 @@ import { Inbox } from "./Inbox";
 import { RequestQueue } from "./RequestQueue";
 import { Vendors } from "./Vendors";
 import { EventLog } from "./EventLog";
+import { ScoringSheet } from "./ScoringSheet";
+import { Approvals } from "./Approvals";
+import { Messages, type SentMessage } from "./Messages";
+import { Procedure } from "./Procedure";
 
 export type Audience = "expert" | "newcomer";
 
@@ -25,6 +29,10 @@ const NAV: { screen: Screen; label: string }[] = [
   { screen: "inbox", label: "Inbox" },
   { screen: "requests", label: "Requests" },
   { screen: "vendors", label: "Vendors & quotes" },
+  { screen: "scoring", label: "Scoring sheet" },
+  { screen: "approvals", label: "Approvals" },
+  { screen: "messages", label: "Chat & email" },
+  { screen: "procedure", label: "Procedure" },
 ];
 
 function WorkspaceShell({ audience }: { audience: Audience }) {
@@ -35,6 +43,10 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
   const [openRequestId, setOpenRequestId] = useState<string | null>(null);
   const [quoted, setQuoted] = useState<Record<string, string[]>>({});
   const [selected, setSelected] = useState<Record<string, string>>({});
+  const [scores, setScores] = useState<Record<string, Record<string, number>>>({});
+  const [routes, setRoutes] = useState<Record<string, ApprovalRoute>>({});
+  const [issued, setIssued] = useState<Record<string, boolean>>({});
+  const [sent, setSent] = useState<SentMessage[]>([]);
 
   useEffect(() => {
     // Browser storage is only readable after mount.
@@ -44,6 +56,7 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
   }, []);
 
   const requests = northwind.requests.filter((r) => r.audience === audience);
+  const currentRequest = () => requests.find((r) => r.id === openRequestId) ?? null;
 
   function go(next: Screen) {
     setScreen(next);
@@ -66,6 +79,30 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
     if (previousVendorId === vendorId) return;
     setSelected((s) => ({ ...s, [requestId]: vendorId }));
     bus.emit({ type: "vendor_selected", requestId, vendorId, previousVendorId });
+  }
+
+  function enterScore(requestId: string, vendorId: string, score: number) {
+    setScores((s) => ({ ...s, [requestId]: { ...s[requestId], [vendorId]: score } }));
+    bus.emit({ type: "score_entered", requestId, vendorId, score });
+  }
+
+  function amountFor(requestId: string) {
+    return quoteFor(selected[requestId], requestId)!.total;
+  }
+
+  function route(requestId: string, to: ApprovalRoute) {
+    setRoutes((r) => ({ ...r, [requestId]: to }));
+    bus.emit({ type: "approval_routed", requestId, vendorId: selected[requestId], amount: amountFor(requestId), to });
+  }
+
+  function issuePo(requestId: string) {
+    setIssued((i) => ({ ...i, [requestId]: true }));
+    bus.emit({ type: "po_issued", requestId, vendorId: selected[requestId], amount: amountFor(requestId) });
+  }
+
+  function sendMessage(m: SentMessage) {
+    setSent((s) => [...s, m]);
+    bus.emit({ type: "message_sent", ...m });
   }
 
   if (!loaded) return null;
@@ -120,7 +157,7 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
           )}
           {screen === "vendors" && (
             <Vendors
-              request={requests.find((r) => r.id === openRequestId) ?? null}
+              request={currentRequest()}
               quoted={openRequestId ? quoted[openRequestId] ?? [] : []}
               selectedVendorId={openRequestId ? selected[openRequestId] ?? null : null}
               onRequestQuotes={requestQuotes}
@@ -128,6 +165,26 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
               onOpenHistory={(vendorId) => bus.emit({ type: "delivery_history_opened", vendorId })}
             />
           )}
+          {screen === "scoring" && (
+            <ScoringSheet
+              request={currentRequest()}
+              quoted={openRequestId ? quoted[openRequestId] ?? [] : []}
+              scores={openRequestId ? scores[openRequestId] ?? {} : {}}
+              onScore={(vendorId, score) => openRequestId && enterScore(openRequestId, vendorId, score)}
+            />
+          )}
+          {screen === "approvals" && (
+            <Approvals
+              request={currentRequest()}
+              vendorId={openRequestId ? selected[openRequestId] ?? null : null}
+              route={openRequestId ? routes[openRequestId] ?? null : null}
+              poIssued={openRequestId ? !!issued[openRequestId] : false}
+              onRoute={(to) => openRequestId && route(openRequestId, to)}
+              onIssuePo={() => openRequestId && issuePo(openRequestId)}
+            />
+          )}
+          {screen === "messages" && <Messages sent={sent} onSend={sendMessage} onBusy={(busy, reason) => bus.emit({ type: "busy_changed", busy, reason })} />}
+          {screen === "procedure" && <Procedure />}
         </main>
         <aside className="w-80 shrink-0 border-l bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
           <EventLog />

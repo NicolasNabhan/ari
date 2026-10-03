@@ -7,9 +7,16 @@ export type WorkspaceEvent =
   | { type: "request_opened"; requestId: string }
   | { type: "delivery_history_opened"; vendorId: string }
   | { type: "quotes_requested"; requestId: string; vendorIds: string[] }
-  | { type: "vendor_selected"; requestId: string; vendorId: string; previousVendorId: string | null };
+  | { type: "vendor_selected"; requestId: string; vendorId: string; previousVendorId: string | null }
+  | { type: "score_entered"; requestId: string; vendorId: string; score: number }
+  | { type: "approval_routed"; requestId: string; vendorId: string; amount: number; to: ApprovalRoute }
+  | { type: "po_issued"; requestId: string; vendorId: string; amount: number }
+  | { type: "message_sent"; channel: "chat" | "email"; to: string; text: string }
+  | { type: "busy_changed"; busy: boolean; reason: "typing" | "call" };
 
-export type Screen = "inbox" | "requests" | "vendors";
+export type ApprovalRoute = "self" | "manager" | "cfo";
+
+export type Screen = "inbox" | "requests" | "vendors" | "scoring" | "approvals" | "messages" | "procedure";
 
 export type TimedEvent = { event: WorkspaceEvent; at: number };
 

@@ -4,11 +4,11 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Scoring sheet accepts typed scores per vendor and emits an event with the value
-- [ ] Approve / route-to-manager / route-to-CFO work and emit events with order amount and supplier
-- [ ] Chat and email send messages to named people and emit events (recipient, topic)
-- [ ] Typing in chat or a marked-active call emits busy start/end events
-- [ ] Procedure page shows the readable procedure and emits a 'procedure opened' event
-- [ ] Both seed requests can be completed end to end in the UI
+- [x] Scoring sheet accepts typed scores per vendor and emits an event with the value
+- [x] Approve / route-to-manager / route-to-CFO work and emit events with order amount and supplier
+- [x] Chat and email send messages to named people and emit events (recipient, topic)
+- [x] Typing in chat or a marked-active call emits busy start/end events
+- [x] Procedure page shows the readable procedure and emits a 'procedure opened' event
+- [x] Both seed requests can be completed end to end in the UI

@@ -49,6 +49,7 @@ export const northwind = {
     { id: "priya", name: "Priya Shah", role: "Finance Analyst" },
     { id: "david", name: "David Okafor", role: "CFO" },
     { id: "lena", name: "Lena Brooks", role: "Operations Manager" },
+    { id: "grace", name: "Grace Lin", role: "Director of Operations (Maria's manager)" },
   ] satisfies Person[],
   procedure: [
     { id: "§1", title: "Every purchase starts with a request", text: "All purchases start from a purchase request in the request queue. Do not buy anything without one." },
@@ -157,4 +158,8 @@ export function lateDeliveries(vendorId: string): DeliveryRecord[] {
 
 export function person(id: string): Person | undefined {
   return northwind.people.find((p) => p.id === id);
+}
+
+export function largestOrder(vendorId: string): number {
+  return Math.max(0, ...(vendor(vendorId)?.deliveryHistory ?? []).map((d) => d.amount));
 }
