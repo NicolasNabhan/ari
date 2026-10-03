@@ -5,7 +5,7 @@ import { northwind } from "@/lib/northwind/seed";
 import { howNotes } from "./howNotes";
 import { choiceFor, nextStepAfter, request, type Step } from "./normalMap";
 import { answerWhy, brokenGuardrail, explainStep, intro, isWhyQuestion } from "./teach";
-import type { CoreEffect, CoreInput, CoreState, DecisionCard, JudgeCall, JudgeContext, StepId, TodayTask } from "./types";
+import type { CoreEffect, CoreInput, CoreState, DecisionCard, JudgeCall, JudgeContext, Review, StepId, TodayTask } from "./types";
 
 // Ari stays quiet only when it's at least this sure of its own explanation.
 export const UNDERSTAND_THRESHOLD = 0.7;
@@ -32,6 +32,7 @@ export function initialState(): CoreState {
     tapToHear: false,
     pendingTap: null,
     followedUp: [],
+    review: null,
   };
 }
 
@@ -210,7 +211,102 @@ function predictNext(out: Out, step: Step): Out {
   });
 }
 
+// ---- End-of-session review ----------------------------------------------
+
+const REVIEW = "review"; // openQuestion.cardId while Ari is reviewing
+const REVIEW_BATCH = 3;
+// Anything that isn't a yes counts as a no (in the offer) or a correction (for a guess).
+const isYes = (t: string) => /^\s*(yes|yeah|yep|yup|sure|ok(ay)?|right|correct|exactly|that'?s right|go ahead|please|s[ií])\b/i.test(t);
+
+function quietGuesses(state: CoreState): string[] {
+  return state.cardOrder
+    .map((id) => state.cards[id])
+    .filter((c) => c.reason?.source === "ari" && !c.reason.confirmed)
+    .sort((a, b) => (a.reason!.confidence ?? 1) - (b.reason!.confidence ?? 1))
+    .map((c) => c.id);
+}
+
+function reviewSay(out: Out, review: Review, text: string): Out {
+  return speak({ ...out, state: { ...out.state, review } }, { cardId: REVIEW, text });
+}
+
+function endSession(out: Out): Out {
+  return { state: { ...out.state, review: null, openQuestion: null }, effects: [...out.effects, { kind: "avatar", state: "bubble" }, { kind: "session_ended" }] };
+}
+
+function showList(out: Out, queue: string[]): Out {
+  if (!queue.length) return endSession(out);
+  return {
+    state: { ...out.state, review: { phase: "list", queue }, openQuestion: null },
+    effects: [...out.effects, { kind: "avatar", state: "bubble" }, { kind: "show_review_list", cardIds: queue }],
+  };
+}
+
+function readNext(out: Out, queue: string[], readThisRound: number): Out {
+  if (!queue.length) return endSession(out);
+  if (readThisRound >= REVIEW_BATCH) {
+    return reviewSay(out, { phase: "continue", queue }, "That's the three I was least sure about. Want me to continue?");
+  }
+  const [current, ...rest] = queue;
+  const card = out.state.cards[current];
+  const text = `For "${card.title}", I assumed: ${card.reason!.text} Is that right?`;
+  return {
+    state: { ...out.state, review: { phase: "reading", queue: rest, current, readThisRound: readThisRound + 1 }, openQuestion: { cardId: REVIEW, text } },
+    effects: [...out.effects, { kind: "avatar", state: "forward" }, { kind: "end_review_item", cardId: current, text }],
+  };
+}
+
+function confirmGuess(out: Out, cardId: string): Out {
+  const card = out.state.cards[cardId];
+  if (!card?.reason) return out;
+  return putCard(out, { ...card, reason: { ...card.reason, confirmed: true } });
+}
+
+function correctGuess(out: Out, cardId: string, text: string): Out {
+  const card = out.state.cards[cardId];
+  if (!card) return out;
+  out = putCard(out, { ...card, reason: { source: "expert", text, types: card.reason?.types ?? [], evidence: [] } });
+  return judge(out, card.id, { kind: "classify", card, answer: text, context: context(out.state, card.requestId) });
+}
+
+function onReviewAnswer(state: CoreState, text: string): Out {
+  const review = state.review!;
+  const out: Out = { state: { ...state, openQuestion: null }, effects: [] };
+  switch (review.phase) {
+    case "offer":
+      return isYes(text) ? readNext(out, review.queue, 0) : showList(out, review.queue);
+    case "continue":
+      return isYes(text) ? readNext(out, review.queue, 0) : showList(out, review.queue);
+    case "reading": {
+      const checked = isYes(text) ? confirmGuess(out, review.current) : correctGuess(out, review.current, text);
+      return readNext(checked, review.queue, review.readThisRound);
+    }
+    default:
+      return out;
+  }
+}
+
+function onCommand(state: CoreState, name: Extract<CoreInput, { kind: "command" }>["name"]): Out {
+  const out: Out = { state, effects: [] };
+  if (state.mode !== "expert") return out;
+  if (name === "review_skip") return endSession(out);
+  if (name !== "end_session") return out;
+  const queue = quietGuesses(state);
+  if (!queue.length) return endSession({ state: { ...state, questionQueue: [], pendingTap: null }, effects: [] });
+  const cleared = { ...state, openQuestion: null, questionQueue: [], pendingTap: null };
+  return reviewSay({ state: cleared, effects: [] }, { phase: "offer", queue }, "Want me to go through the decisions I'm least sure about?");
+}
+
+function onListAction(state: CoreState, input: Extract<CoreInput, { kind: "review_confirm" | "review_correct" }>): Out {
+  if (state.review?.phase !== "list") return { state, effects: [] };
+  let out: Out = { state, effects: [] };
+  out = input.kind === "review_confirm" ? confirmGuess(out, input.cardId) : correctGuess(out, input.cardId, input.text);
+  const queue = state.review.queue.filter((id) => id !== input.cardId);
+  return { ...out, state: { ...out.state, review: { phase: "list", queue } } };
+}
+
 function onUtterance(state: CoreState, input: Extract<CoreInput, { kind: "utterance" }>): Out {
+  if (state.review && state.openQuestion?.cardId === REVIEW && input.speaker === "expert") return onReviewAnswer(state, input.text);
   if (state.mode === "newcomer") {
     if (input.speaker !== "newcomer" || !state.lessons || !isWhyQuestion(input.text)) return { state, effects: [] };
     const current = state.taught[state.taught.length - 1] ?? null;
@@ -265,7 +361,8 @@ function onJudgeResult(state: CoreState, input: Extract<CoreInput, { kind: "judg
     case "classify": {
       if (!card?.reason || card.reason.source !== "expert") return out;
       out = putCard(out, { ...card, reason: { ...card.reason, types: result.types }, ...(result.knowledge ? { knowledge: result.knowledge } : {}) });
-      if (!result.followUp || out.state.followedUp.includes(card.id)) return out;
+      // No follow-ups during the end-of-session review: Maria is wrapping up.
+      if (!result.followUp || out.state.review || out.state.followedUp.includes(card.id)) return out;
       out = { ...out, state: { ...out.state, followedUp: [...out.state.followedUp, card.id] } };
       return ask(out, { cardId: card.id, text: result.followUp });
     }
@@ -285,6 +382,11 @@ export function reduce(state: CoreState, input: CoreInput): Out {
     }
     case "workspace_event":
       return onWorkspaceEvent(state, input);
+    case "command":
+      return onCommand(state, input.name);
+    case "review_confirm":
+    case "review_correct":
+      return onListAction(state, input);
     case "set_tap_to_hear":
       return { state: { ...state, tapToHear: input.on }, effects: [] };
     case "tap_to_hear":

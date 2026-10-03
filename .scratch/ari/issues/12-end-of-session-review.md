@@ -4,10 +4,10 @@
 
 **Blocked by:** 06
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Core test: end_session → offer; on yes, end_review_item for the 3 lowest-confidence quiet decisions in order
-- [ ] Core test: after three, a 'continue?' prompt; on no, show_review_list least-certain first
-- [ ] Voice confirm / correct updates the card and its confirmed flag
-- [ ] Continue / End session button skips the list
-- [ ] Unreviewed quiet decisions keep confirmed = false
+- [x] Core test: end_session → offer; on yes, end_review_item for the 3 lowest-confidence quiet decisions in order
+- [x] Core test: after three, a 'continue?' prompt; on no, show_review_list least-certain first
+- [x] Voice confirm / correct updates the card and its confirmed flag
+- [x] Continue / End session button skips the list
+- [x] Unreviewed quiet decisions keep confirmed = false

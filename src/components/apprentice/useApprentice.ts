@@ -38,6 +38,8 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
   const [task, setTask] = useState<TodayTask | null>(null);
   const [teachingStep, setTeachingStep] = useState<StepId | null>(null);
   const [questionWaiting, setQuestionWaiting] = useState(false);
+  const [reviewList, setReviewList] = useState<string[] | null>(null);
+  const [ended, setEnded] = useState(false);
   const [tapToHear, setTapToHearState] = useState(false);
   const tapRef = useRef(false);
   useEffect(() => {
@@ -92,6 +94,15 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
         case "signal_pending_question":
           setQuestionWaiting(true);
           break;
+        case "show_review_list":
+          setReviewList(effect.cardIds);
+          break;
+        case "session_ended":
+          setReviewList(null);
+          setEnded(true);
+          ariRef.current.say("Thanks, that's everything. I'll remember it for the next person.");
+          break;
+        case "end_review_item":
         case "ask":
           setQuestionWaiting(false);
           (async () => {
@@ -143,5 +154,20 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
     dispatchRef.current({ kind: "tap_to_hear" });
   }
 
-  return { cards, task, teachingStep, allow, askWhy, tapToHear, setTapToHear, questionWaiting, hearQuestion };
+  const review = {
+    list: reviewList,
+    ended,
+    end: () => dispatchRef.current({ kind: "command", name: "end_session" }),
+    skip: () => dispatchRef.current({ kind: "command", name: "review_skip" }),
+    confirm: (cardId: string) => {
+      dispatchRef.current({ kind: "review_confirm", cardId });
+      setReviewList((l) => l?.filter((id) => id !== cardId) ?? null);
+    },
+    correct: (cardId: string, text: string) => {
+      dispatchRef.current({ kind: "review_correct", cardId, text });
+      setReviewList((l) => l?.filter((id) => id !== cardId) ?? null);
+    },
+  };
+
+  return { cards, task, teachingStep, allow, askWhy, tapToHear, setTapToHear, questionWaiting, hearQuestion, review };
 }

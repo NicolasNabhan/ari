@@ -18,6 +18,7 @@ import { Procedure } from "./Procedure";
 import { DecisionCards } from "@/components/apprentice/DecisionCards";
 import { useApprentice } from "@/components/apprentice/useApprentice";
 import { useRecording } from "@/lib/workspace/useRecording";
+import { ReviewList } from "@/components/apprentice/ReviewList";
 import { AriProvider } from "@/components/ari/AriProvider";
 
 export function Workspace({ audience }: { audience: Audience }) {
@@ -55,7 +56,7 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
   const [callWith, setCallWith] = useState<string | null>(null);
   const [showLog, setShowLog] = useState(false);
   const [started, setStarted] = useState(false);
-  const { cards, task, teachingStep, allow, askWhy, tapToHear, setTapToHear, questionWaiting, hearQuestion } = useApprentice(
+  const { cards, task, teachingStep, allow, askWhy, tapToHear, setTapToHear, questionWaiting, hearQuestion, review } = useApprentice(
     bus,
     profile,
     audience,
@@ -162,6 +163,12 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
               Tap to hear questions
             </label>
           )}
+          {started && !teaching && !review.ended && (
+            <button data-ari="end-session" onClick={review.end} className="rounded-lg border px-3 py-1.5 font-medium dark:border-zinc-700">
+              End session
+            </button>
+          )}
+          {review.ended && <span className="font-medium text-green-700 dark:text-green-400">Session saved</span>}
           {!started && (
             <button data-ari="start-session" onClick={() => setStarted(true)} className="rounded-lg bg-indigo-600 px-3 py-1.5 font-medium text-white">
               {teaching ? "Start learning with Ari" : "Start session with Ari"}
@@ -263,6 +270,14 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
           </div>
         </aside>
       </div>
+      {review.list && (
+        <ReviewList
+          cards={review.list.map((id) => cards.find((c) => c.id === id)!).filter(Boolean)}
+          onConfirm={review.confirm}
+          onCorrect={review.correct}
+          onDone={review.skip}
+        />
+      )}
       {questionWaiting && (
         <button
           data-ari="hear-question"

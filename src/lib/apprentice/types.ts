@@ -99,7 +99,10 @@ export type CoreInput =
   // Something the person is about to do; Ari may warn before it happens.
   | { kind: "workspace_intent"; event: WorkspaceEvent }
   | { kind: "set_tap_to_hear"; on: boolean }
-  | { kind: "tap_to_hear" } // the expert tapped "I have a question" 
+  | { kind: "tap_to_hear" } // the expert tapped "I have a question"
+  | { kind: "command"; name: "end_session" | "review_skip" | "show_me" }
+  | { kind: "review_confirm"; cardId: string } // from the review list
+  | { kind: "review_correct"; cardId: string; text: string } 
   | { kind: "workspace_event"; event: WorkspaceEvent; at: number }
   | { kind: "utterance"; speaker: "expert" | "newcomer"; text: string; lang: string; at: number }
   | { kind: "judge_result"; requestId: string; result: JudgeResult };
@@ -111,6 +114,9 @@ export type CoreEffect =
   | { kind: "avatar"; state: "bubble" | "forward" | "tutor" }
   | { kind: "task_set"; task: TodayTask }
   | { kind: "signal_pending_question" } // tap-to-hear: show the signal, don't speak yet
+  | { kind: "end_review_item"; cardId: string; text: string } // read one guess aloud, then listen
+  | { kind: "show_review_list"; cardIds: string[] } // least certain first
+  | { kind: "session_ended" }
   | { kind: "teach_explain"; text: string; highlight?: string; stepId?: StepId }
   | { kind: "warn_guardrail"; text: string; ruleId: string };
 
@@ -132,5 +138,13 @@ export type CoreState = {
   tapToHear: boolean;
   pendingTap: { cardId: string | null; text: string } | null;
   followedUp: string[]; // cards Ari already asked one follow-up about
+  review: Review | null;
   nextRequestId: number;
 };
+
+// End of session: Ari checks the guesses it made while staying quiet.
+export type Review =
+  | { phase: "offer"; queue: string[] }
+  | { phase: "reading"; queue: string[]; current: string; readThisRound: number }
+  | { phase: "continue"; queue: string[] }
+  | { phase: "list"; queue: string[] };
