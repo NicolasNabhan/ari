@@ -4,7 +4,8 @@
 import { northwind } from "@/lib/northwind/seed";
 import { howNotes } from "./howNotes";
 import { choiceFor, nextStepAfter, request, type Step } from "./normalMap";
-import type { CoreEffect, CoreInput, CoreState, DecisionCard, JudgeCall, JudgeContext, TodayTask } from "./types";
+import { answerWhy, brokenGuardrail, explainStep, intro, isWhyQuestion } from "./teach";
+import type { CoreEffect, CoreInput, CoreState, DecisionCard, JudgeCall, JudgeContext, StepId, TodayTask } from "./types";
 
 // Ari stays quiet only when it's at least this sure of its own explanation.
 export const UNDERSTAND_THRESHOLD = 0.7;
@@ -24,6 +25,9 @@ export function initialState(): CoreState {
     task: null,
     openQuestion: null,
     questionQueue: [],
+    lessons: null,
+    taught: [],
+    warned: [],
   };
 }
 
@@ -99,8 +103,36 @@ function askNext(out: Out): Out {
   return ask({ ...out, state: { ...out.state, questionQueue: rest } }, next);
 }
 
+// In teach mode, each step is explained when the newcomer reaches it.
+const STEP_AFTER: Partial<Record<string, StepId>> = {
+  request_opened: "quotes",
+  quotes_requested: "vendor",
+  vendor_selected: "approval",
+  approval_routed: "po",
+};
+
+function quotedVendorIds(state: CoreState): string[] {
+  for (let i = state.events.length - 1; i >= 0; i--) {
+    const e = state.events[i].event;
+    if (e.type === "quotes_requested") return e.vendorIds;
+  }
+  return [];
+}
+
+function teachOnEvent(state: CoreState): Out {
+  const event = state.events[state.events.length - 1].event;
+  const step = STEP_AFTER[event.type];
+  if (!state.lessons || !step || state.taught.includes(step)) return { state, effects: [] };
+  const { text, highlight } = explainStep(step, state.lessons, quotedVendorIds(state));
+  return {
+    state: { ...state, taught: [...state.taught, step] },
+    effects: [{ kind: "teach_explain", text, highlight, stepId: step }],
+  };
+}
+
 function onWorkspaceEvent(state: CoreState, input: Extract<CoreInput, { kind: "workspace_event" }>): Out {
   const history = [...state.events, { event: input.event, at: input.at }];
+  if (state.mode === "newcomer") return teachOnEvent({ ...state, events: history });
   let out: Out = { state: { ...state, events: history }, effects: [] };
 
   const choice = choiceFor(input.event, history);
@@ -155,6 +187,11 @@ function predictNext(out: Out, step: Step): Out {
 }
 
 function onUtterance(state: CoreState, input: Extract<CoreInput, { kind: "utterance" }>): Out {
+  if (state.mode === "newcomer") {
+    if (input.speaker !== "newcomer" || !state.lessons || !isWhyQuestion(input.text)) return { state, effects: [] };
+    const current = state.taught[state.taught.length - 1] ?? null;
+    return { state, effects: [{ kind: "teach_explain", text: answerWhy(input.text, state.lessons, current), stepId: current ?? undefined }] };
+  }
   const question = state.openQuestion;
   if (input.speaker !== "expert" || !question) return { state, effects: [] };
   let out: Out = { state: { ...state, openQuestion: null }, effects: [] };
@@ -208,13 +245,27 @@ function onJudgeResult(state: CoreState, input: Extract<CoreInput, { kind: "judg
 export function reduce(state: CoreState, input: CoreInput): Out {
   switch (input.kind) {
     case "session_start": {
-      const next = { ...initialState(), profile: input.profile, mode: input.mode };
+      const next = { ...initialState(), profile: input.profile, mode: input.mode, lessons: input.lessons ?? null };
       const out: Out = { state: next, effects: [] };
-      if (input.mode !== "expert") return out;
+      if (input.mode === "newcomer") {
+        if (!next.lessons) return out;
+        return { state: next, effects: [{ kind: "avatar", state: "tutor" }, { kind: "teach_explain", text: intro(input.profile, next.lessons) }] };
+      }
       return ask(out, { cardId: null, text: `Hi ${input.profile.name}, what are you working on today?` });
     }
     case "workspace_event":
       return onWorkspaceEvent(state, input);
+    case "workspace_intent": {
+      if (state.mode !== "newcomer" || !state.lessons) return { state, effects: [] };
+      const rule = brokenGuardrail(input.event, state.lessons);
+      if (!rule) return { state, effects: [] };
+      const key = `${rule.id}:${JSON.stringify(input.event)}`;
+      if (state.warned.includes(key)) return { state, effects: [] }; // they heard the warning and chose to go ahead
+      return {
+        state: { ...state, warned: [...state.warned, key] },
+        effects: [{ kind: "warn_guardrail", text: rule.warning, ruleId: rule.id }],
+      };
+    }
     case "utterance":
       return onUtterance(state, input);
     case "judge_result":

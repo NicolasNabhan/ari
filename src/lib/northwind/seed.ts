@@ -72,7 +72,7 @@ export const northwind = {
       deliveryHistory: [
         { order: "PO-2291", amount: 18200, promised: "2025-11-04", delivered: "2025-11-12" },
         { order: "PO-2340", amount: 9400, promised: "2026-01-15", delivered: "2026-01-15" },
-        { order: "PO-2417", amount: 22750, promised: "2026-03-02", delivered: "2026-03-09" },
+        { order: "PO-2417", amount: 27750, promised: "2026-03-02", delivered: "2026-03-09" },
         { order: "PO-2502", amount: 6100, promised: "2026-05-20", delivered: "2026-05-19" },
         { order: "PO-2588", amount: 12900, promised: "2026-07-08", delivered: "2026-07-08" },
       ],

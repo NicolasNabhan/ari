@@ -4,11 +4,13 @@
 
 **Blocked by:** 02, 04, 05, 11
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Hand-written Maria session file loads in newcomer mode
-- [ ] Ari explains each step out loud in tutor state, with highlights on the next element
-- [ ] Spoken 'why?' at any step is answered from saved reasons; unconfirmed ones are labelled
-- [ ] Core test: approving a $30k order from a new supplier emits warn_guardrail before the approval completes
-- [ ] Personal-style choices are described as optional
-- [ ] Teach-mode explanations include the relevant how-notes (moved from ticket 11)
+- [x] Hand-written Maria session file loads in newcomer mode
+- [x] Ari explains each step out loud in tutor state, with highlights on the next element
+- [x] Spoken 'why?' at any step is answered from saved reasons; unconfirmed ones are labelled
+- [x] Core test: approving a $30k order from a new supplier emits warn_guardrail before the approval completes
+- [x] Personal-style choices are described as optional
+- [x] Teach-mode explanations include the relevant how-notes (moved from ticket 11)
+
+**Notes:** Teach logic lives in the Core (newcomer mode) with pure helpers in teach.ts; Maria's hand-written session is mariaSession.ts (structured guardrails, incl. the unwritten $25k CFO rule). Guardrail check runs on a workspace_intent before the approval happens; a second click after the warning goes through. Seed change: Apex's PO-2417 is now $27,750 so Apex counts as an established supplier. Budget/deadline/resources reason types default to strong advice (they belong to one request).

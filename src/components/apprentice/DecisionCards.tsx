@@ -6,16 +6,28 @@ const STATUS_NOTE: Record<OptionStatus, string> = {
   against: "against procedure",
 };
 
-export function DecisionCards({ cards }: { cards: DecisionCard[] }) {
+export function DecisionCards({
+  cards,
+  title = "What Ari has learned",
+  activeStep = null,
+}: {
+  cards: DecisionCard[];
+  title?: string;
+  activeStep?: string | null;
+}) {
   return (
     <section>
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">What Ari has learned</h2>
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{title}</h2>
       {cards.length === 0 ? (
         <p className="mt-2 text-sm text-zinc-400">Ari is watching. Decisions will appear here.</p>
       ) : (
         <ol data-ari="decision-cards" className="mt-2 space-y-3">
           {cards.map((card) => (
-            <li key={card.id} data-ari={`card-${card.stepId}`} className="rounded-xl border bg-white p-3 text-sm shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <li
+              key={card.id}
+              data-ari={`card-${card.stepId}`}
+              className={`rounded-xl border bg-white p-3 text-sm shadow-sm dark:bg-zinc-900 ${card.stepId === activeStep ? "border-indigo-500 ring-2 ring-indigo-200 dark:ring-indigo-900" : "dark:border-zinc-800"}`}
+            >
               <div className="flex items-start justify-between gap-2">
                 <span className="font-semibold">{card.title}</span>
                 {card.prediction && (
@@ -47,6 +59,9 @@ export function DecisionCards({ cards }: { cards: DecisionCard[] }) {
                 </p>
               )}
               {card.reason && <ReasonView reason={card.reason} />}
+              {card.reason?.source === "ari" && !card.reason.confirmed && (
+                <p className="mt-1 text-xs italic text-zinc-400">Ari&rsquo;s best guess, not confirmed</p>
+              )}
               {card.howNotes.length > 0 && (
                 <ul data-ari="how-notes" className="mt-2 space-y-0.5 text-xs text-zinc-500">
                   {card.howNotes.map((n) => (

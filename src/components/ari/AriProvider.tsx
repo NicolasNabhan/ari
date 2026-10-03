@@ -165,7 +165,7 @@ function AriAvatar({
   }, [state]);
 
   return (
-    <div data-ari="avatar" data-state={state} data-face={face} className="pointer-events-none fixed bottom-6 right-[22rem] z-50 flex flex-col items-end gap-2">
+    <div data-ari="avatar" data-state={state} data-face={face} className="pointer-events-none fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
       {state !== "bubble" && caption && (
         <div className="pointer-events-auto max-w-xs rounded-2xl bg-white px-4 py-3 text-sm shadow-lg dark:bg-zinc-800">
           <span className="font-semibold text-indigo-600 dark:text-indigo-300">Ari: </span>

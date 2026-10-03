@@ -35,6 +35,27 @@ export type Reason = {
   types: string[];
   evidence: string[];
   confidence?: number; // only for Ari's own explanations
+  confirmed?: boolean; // the expert confirmed Ari's own explanation
+};
+
+// A must-follow rule Ari can check before the newcomer acts.
+export type Guardrail = {
+  id: string;
+  text: string; // the rule, in plain words
+  warning: string; // what Ari says when someone is about to break it
+  step: StepId;
+  requiredOption: string;
+  minAmount: number; // applies to purchases over this amount
+  onlyNewSuppliers: boolean; // …from suppliers who've never had an order this big
+  unwritten: boolean;
+};
+
+// Everything Ari learned from one expert session, ready to teach.
+export type Lessons = {
+  expert: string;
+  requestSubject: string;
+  cards: DecisionCard[];
+  guardrails: Guardrail[];
 };
 
 export type JudgeCall =
@@ -67,7 +88,9 @@ export type JudgeResult =
 export type TodayTask = { text: string; requestId: string | null };
 
 export type CoreInput =
-  | { kind: "session_start"; profile: Profile; mode: Mode }
+  | { kind: "session_start"; profile: Profile; mode: Mode; lessons?: Lessons }
+  // Something the person is about to do; Ari may warn before it happens.
+  | { kind: "workspace_intent"; event: WorkspaceEvent }
   | { kind: "workspace_event"; event: WorkspaceEvent; at: number }
   | { kind: "utterance"; speaker: "expert" | "newcomer"; text: string; lang: string; at: number }
   | { kind: "judge_result"; requestId: string; result: JudgeResult };
@@ -77,7 +100,9 @@ export type CoreEffect =
   | { kind: "judge_request"; requestId: string; call: JudgeCall }
   | { kind: "ask"; text: string; cardId: string | null } // null: the "what are you working on?" question
   | { kind: "avatar"; state: "bubble" | "forward" | "tutor" }
-  | { kind: "task_set"; task: TodayTask };
+  | { kind: "task_set"; task: TodayTask }
+  | { kind: "teach_explain"; text: string; highlight?: string; stepId?: StepId }
+  | { kind: "warn_guardrail"; text: string; ruleId: string };
 
 export type CoreState = {
   profile: Profile | null;
@@ -90,5 +115,8 @@ export type CoreState = {
   task: TodayTask | null;
   openQuestion: { cardId: string | null; text: string } | null;
   questionQueue: { cardId: string; text: string }[];
+  lessons: Lessons | null;
+  taught: StepId[]; // steps already explained to the newcomer
+  warned: string[]; // intents already warned about (a second try goes through)
   nextRequestId: number;
 };
