@@ -13,15 +13,18 @@ export function Messages({
   sent,
   onSend,
   onBusy,
+  callWith,
+  onToggleCall,
 }: {
   sent: SentMessage[];
   onSend: (m: SentMessage) => void;
-  onBusy: (busy: boolean, reason: "typing" | "call") => void;
+  onBusy: (busy: boolean, reason: "typing") => void;
+  callWith: string | null; // person id, if on a call
+  onToggleCall: (personId: string) => void;
 }) {
   const [to, setTo] = useState(northwind.people[0].id);
   const [channel, setChannel] = useState<"chat" | "email">("chat");
   const [text, setText] = useState("");
-  const [onCall, setOnCall] = useState(false);
   const typing = useRef(false);
   const idle = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -52,12 +55,8 @@ export function Messages({
     stopTyping();
   }
 
-  function toggleCall() {
-    setOnCall(!onCall);
-    onBusy(!onCall, "call");
-  }
-
   const person = northwind.people.find((p) => p.id === to)!;
+  const onCall = callWith === to;
   const thread = sent.filter((m) => m.to === to);
   return (
     <section className="flex gap-4">
@@ -80,7 +79,7 @@ export function Messages({
                 {c === "chat" ? "Chat" : "Email"}
               </button>
             ))}
-            <button data-ari="call-toggle" onClick={toggleCall} className={`rounded px-2 py-1 font-medium ${onCall ? "bg-red-600 text-white" : "border dark:border-zinc-700"}`}>
+            <button data-ari="call-toggle" onClick={() => onToggleCall(to)} className={`rounded px-2 py-1 font-medium ${onCall ? "bg-red-600 text-white" : "border dark:border-zinc-700"}`}>
               {onCall ? "End call" : "Call"}
             </button>
           </div>

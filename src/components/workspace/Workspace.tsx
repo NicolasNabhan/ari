@@ -52,9 +52,15 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
   const [routes, setRoutes] = useState<Record<string, ApprovalRoute>>({});
   const [issued, setIssued] = useState<Record<string, boolean>>({});
   const [sent, setSent] = useState<SentMessage[]>([]);
+  const [callWith, setCallWith] = useState<string | null>(null);
   const [showLog, setShowLog] = useState(false);
   const [started, setStarted] = useState(false);
-  const { cards, task, teachingStep, allow, askWhy } = useApprentice(bus, profile, audience, started);
+  const { cards, task, teachingStep, allow, askWhy, tapToHear, setTapToHear, questionWaiting, hearQuestion } = useApprentice(
+    bus,
+    profile,
+    audience,
+    started,
+  );
   const teaching = audience === "newcomer";
   useRecording(!!profile);
 
@@ -112,6 +118,13 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
     bus.emit({ type: "po_issued", requestId, vendorId: selected[requestId], amount: amountFor(requestId) });
   }
 
+  // The call stays on across screens until it's ended, from chat or the header.
+  function toggleCall(personId: string) {
+    const ending = callWith !== null;
+    setCallWith(ending ? null : personId);
+    bus.emit({ type: "busy_changed", busy: !ending, reason: "call" });
+  }
+
   function sendMessage(m: SentMessage) {
     setSent((s) => [...s, m]);
     bus.emit({ type: "message_sent", ...m });
@@ -138,6 +151,17 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
         <span className="font-semibold">{profile.company}</span>
         <span className="flex items-center gap-4 text-sm text-zinc-500">
           {task && <span data-ari="today-task">Today: {task.text}</span>}
+          {callWith && (
+            <button data-ari="end-call" onClick={() => toggleCall(callWith)} className="rounded-lg bg-red-600 px-3 py-1.5 font-medium text-white">
+              End call with {northwind.people.find((p) => p.id === callWith)?.name}
+            </button>
+          )}
+          {!teaching && (
+            <label className="flex items-center gap-1" title="Ari shows a signal instead of speaking up; tap it when you're ready">
+              <input data-ari="tap-to-hear" type="checkbox" checked={tapToHear} onChange={(e) => setTapToHear(e.target.checked)} />
+              Tap to hear questions
+            </label>
+          )}
           {!started && (
             <button data-ari="start-session" onClick={() => setStarted(true)} className="rounded-lg bg-indigo-600 px-3 py-1.5 font-medium text-white">
               {teaching ? "Start learning with Ari" : "Start session with Ari"}
@@ -203,7 +227,15 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
               onIssuePo={() => openRequestId && issuePo(openRequestId)}
             />
           )}
-          {screen === "messages" && <Messages sent={sent} onSend={sendMessage} onBusy={(busy, reason) => bus.emit({ type: "busy_changed", busy, reason })} />}
+          {screen === "messages" && (
+            <Messages
+              sent={sent}
+              onSend={sendMessage}
+              onBusy={(busy, reason) => bus.emit({ type: "busy_changed", busy, reason })}
+              callWith={callWith}
+              onToggleCall={toggleCall}
+            />
+          )}
           {screen === "procedure" && <Procedure />}
         </main>
         <aside className="w-80 shrink-0 space-y-6 overflow-y-auto border-l pb-80 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
@@ -231,6 +263,15 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
           </div>
         </aside>
       </div>
+      {questionWaiting && (
+        <button
+          data-ari="hear-question"
+          onClick={hearQuestion}
+          className="fixed bottom-36 right-6 z-50 animate-pulse rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg"
+        >
+          Ari has a question · tap to hear
+        </button>
+      )}
     </div>
   );
 }

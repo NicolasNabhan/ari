@@ -54,7 +54,7 @@ const KEYWORDS: [RegExp, string][] = [
   [/polic(y|ies)|compan(y|ies) says|required/i, "Company policy"],
   [/cheap|budget|cost|price|expensive/i, "Budget"],
   [/safe|risk|careful/i, "Risk avoidance"],
-  [/prefer|i like|my style|just feel|taste/i, "Personal preference"],
+  [/prefer|like (them|it)|my style|just feel|taste/i, "Personal preference"],
 ];
 
 export function classifyAnswer(answer: string): string[] {
@@ -71,7 +71,15 @@ export function ruleJudge(call: JudgeCall): JudgeResult {
     }
     case "assess":
       return assess(call.card, call.context);
-    case "classify":
-      return { kind: "classify", types: classifyAnswer(call.answer), summary: call.answer };
+    case "classify": {
+      const types = classifyAnswer(call.answer);
+      // "I just like them better" could be experience or taste; that changes
+      // what the next person should do, so it's worth one gentle follow-up.
+      const vague = types.length === 1 && (types[0] === "No clear reason yet" || (types[0] === "Personal preference" && /just|better|like/i.test(call.answer)));
+      const followUp = vague
+        ? `Is that from past experience${call.card.stepId === "vendor" ? " with them" : ""}, or personal taste?`
+        : undefined;
+      return { kind: "classify", types, summary: call.answer, followUp };
+    }
   }
 }

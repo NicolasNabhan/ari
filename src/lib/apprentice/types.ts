@@ -83,7 +83,8 @@ export type JudgeResult =
       question: string; // what to ask if Ari doesn't understand
       types: string[];
     }
-  | { kind: "classify"; types: string[]; summary: string };
+  // followUp: one gentle question when the answer is vague in a way that matters
+  | { kind: "classify"; types: string[]; summary: string; followUp?: string };
 
 export type TodayTask = { text: string; requestId: string | null };
 
@@ -91,6 +92,8 @@ export type CoreInput =
   | { kind: "session_start"; profile: Profile; mode: Mode; lessons?: Lessons }
   // Something the person is about to do; Ari may warn before it happens.
   | { kind: "workspace_intent"; event: WorkspaceEvent }
+  | { kind: "set_tap_to_hear"; on: boolean }
+  | { kind: "tap_to_hear" } // the expert tapped "I have a question" 
   | { kind: "workspace_event"; event: WorkspaceEvent; at: number }
   | { kind: "utterance"; speaker: "expert" | "newcomer"; text: string; lang: string; at: number }
   | { kind: "judge_result"; requestId: string; result: JudgeResult };
@@ -101,6 +104,7 @@ export type CoreEffect =
   | { kind: "ask"; text: string; cardId: string | null } // null: the "what are you working on?" question
   | { kind: "avatar"; state: "bubble" | "forward" | "tutor" }
   | { kind: "task_set"; task: TodayTask }
+  | { kind: "signal_pending_question" } // tap-to-hear: show the signal, don't speak yet
   | { kind: "teach_explain"; text: string; highlight?: string; stepId?: StepId }
   | { kind: "warn_guardrail"; text: string; ruleId: string };
 
@@ -118,5 +122,9 @@ export type CoreState = {
   lessons: Lessons | null;
   taught: StepId[]; // steps already explained to the newcomer
   warned: string[]; // intents already warned about (a second try goes through)
+  busy: string[]; // why the expert is busy right now ("typing", "call")
+  tapToHear: boolean;
+  pendingTap: { cardId: string | null; text: string } | null;
+  followedUp: string[]; // cards Ari already asked one follow-up about
   nextRequestId: number;
 };

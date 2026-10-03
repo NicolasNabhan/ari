@@ -37,6 +37,19 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
   const [cards, setCards] = useState<DecisionCard[]>([]);
   const [task, setTask] = useState<TodayTask | null>(null);
   const [teachingStep, setTeachingStep] = useState<StepId | null>(null);
+  const [questionWaiting, setQuestionWaiting] = useState(false);
+  const [tapToHear, setTapToHearState] = useState(false);
+  const tapRef = useRef(false);
+  useEffect(() => {
+    try {
+      const on = localStorage.getItem("ari.tapToHear") === "1";
+      tapRef.current = on;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTapToHearState(on);
+    } catch {
+      // storage blocked: default to asking right away
+    }
+  }, []);
   const dispatchRef = useRef<(input: CoreInput) => CoreEffect[]>(() => []);
 
   useEffect(() => {
@@ -76,7 +89,11 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
           ariRef.current.setState("forward");
           ariRef.current.say(effect.text).then(() => ariRef.current.setState("tutor"));
           break;
+        case "signal_pending_question":
+          setQuestionWaiting(true);
+          break;
         case "ask":
+          setQuestionWaiting(false);
           (async () => {
             await ariRef.current.say(effect.text);
             const heard = await ariRef.current.listen();
@@ -87,6 +104,7 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
     }
 
     state.current = initialState();
+    dispatch({ kind: "set_tap_to_hear", on: tapRef.current });
     dispatch({ kind: "session_start", profile, mode, lessons: mode === "newcomer" ? MARIA_SESSION : undefined });
     const unsubscribe = bus.subscribe(({ event, at }) => {
       clearHighlight();
@@ -110,5 +128,20 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
     dispatchRef.current({ kind: "utterance", speaker: "newcomer", text: heard, lang: "en-US", at: Date.now() });
   }
 
-  return { cards, task, teachingStep, allow, askWhy };
+  function setTapToHear(on: boolean) {
+    tapRef.current = on;
+    setTapToHearState(on);
+    try {
+      localStorage.setItem("ari.tapToHear", on ? "1" : "0");
+    } catch {
+      // not remembered, still applies to this session
+    }
+    dispatchRef.current({ kind: "set_tap_to_hear", on });
+  }
+
+  function hearQuestion() {
+    dispatchRef.current({ kind: "tap_to_hear" });
+  }
+
+  return { cards, task, teachingStep, allow, askWhy, tapToHear, setTapToHear, questionWaiting, hearQuestion };
 }

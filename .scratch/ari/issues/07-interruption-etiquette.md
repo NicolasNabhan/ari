@@ -4,10 +4,12 @@
 
 **Blocked by:** 04, 06
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Core test: a question triggered while busy is held and emitted when busy ends
-- [ ] Core test: in tap-to-hear mode, signal_pending_question is emitted and ask only follows tap_to_hear
-- [ ] Core test: a vague answer produces exactly one follow-up; a second vague answer produces none
-- [ ] Tap-to-hear setting is visible in the expert UI and persists in the browser
-- [ ] Works live with real chat typing in the workspace
+- [x] Core test: a question triggered while busy is held and emitted when busy ends
+- [x] Core test: in tap-to-hear mode, signal_pending_question is emitted and ask only follows tap_to_hear
+- [x] Core test: a vague answer produces exactly one follow-up; a second vague answer produces none
+- [x] Tap-to-hear setting is visible in the expert UI and persists in the browser
+- [x] Works live with real chat typing in the workspace
+
+**Notes:** Call state moved from the chat screen to the workspace shell (header 'End call' button), so a call stays on across screens. Typing ends after 3s idle, on send, or when leaving the chat screen.

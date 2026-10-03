@@ -28,6 +28,10 @@ export function initialState(): CoreState {
     lessons: null,
     taught: [],
     warned: [],
+    busy: [],
+    tapToHear: false,
+    pendingTap: null,
+    followedUp: [],
   };
 }
 
@@ -85,16 +89,28 @@ function putCard(out: Out, card: DecisionCard): Out {
   };
 }
 
-// Ask now if nothing else is being asked; otherwise wait in line.
-function ask(out: Out, question: { cardId: string | null; text: string }): Out {
-  if (out.state.openQuestion) {
-    if (question.cardId === null) return out;
-    return { ...out, state: { ...out.state, questionQueue: [...out.state.questionQueue, { cardId: question.cardId, text: question.text }] } };
-  }
+type Question = { cardId: string | null; text: string };
+
+function speak(out: Out, question: Question): Out {
   return {
-    state: { ...out.state, openQuestion: question },
+    state: { ...out.state, openQuestion: question, pendingTap: null },
     effects: [...out.effects, { kind: "avatar", state: "forward" }, { kind: "ask", text: question.text, cardId: question.cardId }],
   };
+}
+
+// Ask now if Ari can; otherwise wait in line. Ari never talks over another
+// question, never while the expert is busy, and in tap-to-hear mode only
+// after the expert taps.
+function ask(out: Out, question: Question): Out {
+  const s = out.state;
+  if (s.openQuestion || s.pendingTap || s.busy.length) {
+    if (question.cardId === null) return out;
+    return { ...out, state: { ...s, questionQueue: [...s.questionQueue, { cardId: question.cardId, text: question.text }] } };
+  }
+  if (s.tapToHear && question.cardId !== null) {
+    return { state: { ...s, pendingTap: question }, effects: [...out.effects, { kind: "signal_pending_question" }] };
+  }
+  return speak(out, question);
 }
 
 function askNext(out: Out): Out {
@@ -130,10 +146,18 @@ function teachOnEvent(state: CoreState): Out {
   };
 }
 
+function onBusyChanged(out: Out, busy: boolean, reason: string): Out {
+  const was = out.state.busy;
+  const now = busy ? [...new Set([...was, reason])] : was.filter((r) => r !== reason);
+  out = { ...out, state: { ...out.state, busy: now } };
+  return was.length && !now.length ? askNext(out) : out;
+}
+
 function onWorkspaceEvent(state: CoreState, input: Extract<CoreInput, { kind: "workspace_event" }>): Out {
   const history = [...state.events, { event: input.event, at: input.at }];
   if (state.mode === "newcomer") return teachOnEvent({ ...state, events: history });
   let out: Out = { state: { ...state, events: history }, effects: [] };
+  if (input.event.type === "busy_changed") out = onBusyChanged(out, input.event.busy, input.event.reason);
 
   const choice = choiceFor(input.event, history);
   if (choice) {
@@ -201,8 +225,11 @@ function onUtterance(state: CoreState, input: Extract<CoreInput, { kind: "uttera
     out = { state: { ...out.state, task }, effects: [{ kind: "task_set", task }] };
   } else {
     const card = out.state.cards[question.cardId];
-    out = judge(out, card.id, { kind: "classify", card, answer: input.text, context: context(out.state, card.requestId) });
-    out = putCard(out, { ...card, reason: { source: "expert", text: input.text, types: [], evidence: [] } });
+    // A follow-up answer adds to the first one.
+    const previous = out.state.followedUp.includes(card.id) && card.reason?.source === "expert" ? card.reason : null;
+    const answer = previous ? `${previous.text} ${input.text}` : input.text;
+    out = judge(out, card.id, { kind: "classify", card, answer, context: context(out.state, card.requestId) });
+    out = putCard(out, { ...card, reason: { source: "expert", text: answer, types: previous?.types ?? [], evidence: [] } });
   }
   out = { ...out, effects: [...out.effects, { kind: "avatar", state: "bubble" }] };
   return askNext(out);
@@ -237,7 +264,10 @@ function onJudgeResult(state: CoreState, input: Extract<CoreInput, { kind: "judg
     }
     case "classify": {
       if (!card?.reason || card.reason.source !== "expert") return out;
-      return putCard(out, { ...card, reason: { ...card.reason, types: result.types } });
+      out = putCard(out, { ...card, reason: { ...card.reason, types: result.types } });
+      if (!result.followUp || out.state.followedUp.includes(card.id)) return out;
+      out = { ...out, state: { ...out.state, followedUp: [...out.state.followedUp, card.id] } };
+      return ask(out, { cardId: card.id, text: result.followUp });
     }
   }
 }
@@ -245,7 +275,7 @@ function onJudgeResult(state: CoreState, input: Extract<CoreInput, { kind: "judg
 export function reduce(state: CoreState, input: CoreInput): Out {
   switch (input.kind) {
     case "session_start": {
-      const next = { ...initialState(), profile: input.profile, mode: input.mode, lessons: input.lessons ?? null };
+      const next = { ...initialState(), profile: input.profile, mode: input.mode, lessons: input.lessons ?? null, tapToHear: state.tapToHear };
       const out: Out = { state: next, effects: [] };
       if (input.mode === "newcomer") {
         if (!next.lessons) return out;
@@ -255,6 +285,10 @@ export function reduce(state: CoreState, input: CoreInput): Out {
     }
     case "workspace_event":
       return onWorkspaceEvent(state, input);
+    case "set_tap_to_hear":
+      return { state: { ...state, tapToHear: input.on }, effects: [] };
+    case "tap_to_hear":
+      return state.pendingTap && !state.openQuestion ? speak({ state, effects: [] }, state.pendingTap) : { state, effects: [] };
     case "workspace_intent": {
       if (state.mode !== "newcomer" || !state.lessons) return { state, effects: [] };
       const rule = brokenGuardrail(input.event, state.lessons);
