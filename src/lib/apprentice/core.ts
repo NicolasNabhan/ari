@@ -1,6 +1,7 @@
 // The Apprentice Core: everything Ari does, as a pure reducer.
 // (state, input) → (state, effects). No network; judgment goes out as
 // judge_request effects and comes back as judge_result inputs.
+import { howNotes } from "./howNotes";
 import { choiceFor, nextStepAfter, request, type Step } from "./normalMap";
 import type { CoreEffect, CoreInput, CoreState, DecisionCard, JudgeCall } from "./types";
 
@@ -66,6 +67,7 @@ export function reduce(state: CoreState, input: CoreInput): { state: CoreState; 
               chosen: choice.chosen,
               previousChoices: existing ? [...existing.previousChoices, existing.chosen] : [],
               prediction: existing?.prediction,
+              howNotes: existing?.howNotes ?? [],
               at: existing?.at ?? input.at,
             },
             next.predictions[id],
@@ -77,6 +79,18 @@ export function reduce(state: CoreState, input: CoreInput): { state: CoreState; 
           };
           effects.push({ kind: "upsert_card", card });
         }
+      }
+
+      // Any event can change how-notes (a pause ends, a message is sent).
+      const allCards = next.cardOrder.map((id) => next.cards[id]);
+      for (const card of allCards) {
+        const notes = howNotes(card, allCards, history);
+        if (notes.join("\n") === card.howNotes.join("\n")) continue;
+        const updated = { ...card, howNotes: notes };
+        next = { ...next, cards: { ...next.cards, [card.id]: updated } };
+        const i = effects.findIndex((e) => e.kind === "upsert_card" && e.card.id === card.id);
+        if (i >= 0) effects.splice(i, 1);
+        effects.push({ kind: "upsert_card", card: updated });
       }
 
       const upcoming = nextStepAfter(input.event, history);

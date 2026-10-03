@@ -13,6 +13,7 @@
   "dependencies": {
     "@elevenlabs/client": "^1.26.0",
     "@elevenlabs/react": "^1.16.0",
+    "@rrweb/record": "^2.1.7",
     "next": "16.3.8",
     "react": "19.2.8",
     "react-dom": "19.2.8"

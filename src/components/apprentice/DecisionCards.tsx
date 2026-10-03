@@ -41,6 +41,13 @@ export function DecisionCards({ cards }: { cards: DecisionCard[] }) {
                   );
                 })}
               </ul>
+              {card.howNotes.length > 0 && (
+                <ul data-ari="how-notes" className="mt-2 space-y-0.5 text-xs text-zinc-500">
+                  {card.howNotes.map((n) => (
+                    <li key={n}>· {n}</li>
+                  ))}
+                </ul>
+              )}
               {card.procedureRef && <p className="mt-2 text-xs text-zinc-400">Procedure {card.procedureRef}</p>}
             </li>
           ))}

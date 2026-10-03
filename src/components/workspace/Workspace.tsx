@@ -16,6 +16,7 @@ import { Messages, type SentMessage } from "./Messages";
 import { Procedure } from "./Procedure";
 import { DecisionCards } from "@/components/apprentice/DecisionCards";
 import { useApprentice } from "@/components/apprentice/useApprentice";
+import { useRecording } from "@/lib/workspace/useRecording";
 
 export type Audience = "expert" | "newcomer";
 
@@ -51,6 +52,7 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
   const [sent, setSent] = useState<SentMessage[]>([]);
   const [showLog, setShowLog] = useState(false);
   const { cards } = useApprentice(bus, profile, audience);
+  useRecording(!!profile);
 
   useEffect(() => {
     // Browser storage is only readable after mount.

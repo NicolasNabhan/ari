@@ -23,7 +23,8 @@ export type DecisionCard = {
   chosen: string;
   previousChoices: string[];
   prediction?: { optionId: string; correct: boolean };
-  at: number;
+  howNotes: string[];
+  at: number; // time of the first choice
 };
 
 export type JudgeCall = {

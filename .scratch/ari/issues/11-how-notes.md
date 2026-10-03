@@ -4,9 +4,9 @@
 
 **Blocked by:** 04, 05
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] rrweb records the workspace session
-- [ ] Core test: each of the five notes is produced from a scripted event sequence
-- [ ] Notes render as grey lines on cards
-- [ ] Teach-mode explanations include the relevant how-notes
+- [x] rrweb records the workspace session
+- [x] Core test: each of the five notes is produced from a scripted event sequence
+- [x] Notes render as grey lines on cards
+- [x] ~~Teach-mode explanations include the relevant how-notes~~ (moved to ticket 08, since teach mode doesn't exist yet)
