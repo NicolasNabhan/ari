@@ -14,6 +14,8 @@ import { ScoringSheet } from "./ScoringSheet";
 import { Approvals } from "./Approvals";
 import { Messages, type SentMessage } from "./Messages";
 import { Procedure } from "./Procedure";
+import { DecisionCards } from "@/components/apprentice/DecisionCards";
+import { useApprentice } from "@/components/apprentice/useApprentice";
 
 export type Audience = "expert" | "newcomer";
 
@@ -47,6 +49,8 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
   const [routes, setRoutes] = useState<Record<string, ApprovalRoute>>({});
   const [issued, setIssued] = useState<Record<string, boolean>>({});
   const [sent, setSent] = useState<SentMessage[]>([]);
+  const [showLog, setShowLog] = useState(false);
+  const { cards } = useApprentice(bus, profile, audience);
 
   useEffect(() => {
     // Browser storage is only readable after mount.
@@ -186,8 +190,18 @@ function WorkspaceShell({ audience }: { audience: Audience }) {
           {screen === "messages" && <Messages sent={sent} onSend={sendMessage} onBusy={(busy, reason) => bus.emit({ type: "busy_changed", busy, reason })} />}
           {screen === "procedure" && <Procedure />}
         </main>
-        <aside className="w-80 shrink-0 border-l bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-          <EventLog />
+        <aside className="w-80 shrink-0 space-y-6 overflow-y-auto border-l bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+          <DecisionCards cards={cards} />
+          <div>
+            <button onClick={() => setShowLog(!showLog)} className="text-xs text-zinc-400 underline">
+              {showLog ? "Hide" : "Show"} event log
+            </button>
+            {showLog && (
+              <div className="mt-2">
+                <EventLog />
+              </div>
+            )}
+          </div>
         </aside>
       </div>
     </div>
