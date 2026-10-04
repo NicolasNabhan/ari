@@ -36,7 +36,7 @@ type Phrases = {
 
 const EN: Phrases = {
   intro: (name, expert) =>
-    `Hi ${name}. I'm Ari. I learned how ${expert} handles purchase requests, and I'll walk you through it step by step. Open the request in your inbox to start.`,
+    `Hi ${name}. I'm Ari. I watched how ${expert} works and learned her job, and now I'll pass it on to you. The first thing you might want to check out is your schedule, because it shapes the whole workflow; then we'll get into the specifics. Open Week & schedule on the left.`,
   step: {
     quotes: "First, get quotes.",
     vendor: "Next, pick a vendor.",
@@ -74,7 +74,7 @@ const EN: Phrases = {
 
 const ES: Phrases = {
   intro: (name, expert) =>
-    `Hola ${name}. Soy Ari. Aprendí cómo ${expert} gestiona las solicitudes de compra y te lo voy a explicar paso a paso. Abre la solicitud en tu bandeja de entrada para empezar.`,
+    `Hola ${name}. Soy Ari. Observé cómo trabaja ${expert} y aprendí su trabajo; ahora te lo voy a pasar a ti. Lo primero que conviene mirar es tu horario, porque marca todo el flujo de trabajo; luego vamos a los detalles. Abre Semana y horario a la izquierda.`,
   step: {
     quotes: "Primero, pide presupuestos.",
     vendor: "Ahora, elige un proveedor.",

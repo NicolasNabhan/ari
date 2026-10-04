@@ -5,6 +5,7 @@ import { northwind } from "@/lib/northwind/seed";
 import { summarize } from "@/lib/gaze/attention";
 import { howNotes } from "./howNotes";
 import { choiceFor, nextStepAfter, request, type Step } from "./normalMap";
+import { scheduleBriefing } from "@/lib/context/briefing";
 import { answerWhy, brokenGuardrail, explainStep, intro, isSpanish, isWhyQuestion, showMe } from "./teach";
 import type { CoreEffect, CoreInput, CoreState, DecisionCard, JudgeCall, JudgeContext, Review, StepId, TodayTask } from "./types";
 
@@ -25,6 +26,7 @@ export function initialState(): CoreState {
     nextRequestId: 1,
     task: null,
     openQuestion: null,
+    briefed: false,
     questionQueue: [],
     lessons: null,
     taught: [],
@@ -158,6 +160,13 @@ function quotedVendorIds(state: CoreState): string[] {
 
 function teachOnEvent(state: CoreState): Out {
   const event = state.events[state.events.length - 1].event;
+  // The schedule comes first: a briefing on the week the first time it's opened.
+  if (event.type === "screen_opened" && event.screen === "week" && state.lessons && !state.briefed) {
+    return {
+      state: { ...state, briefed: true },
+      effects: [{ kind: "teach_explain", text: scheduleBriefing(state.lessons.expert), highlight: "nav-inbox", lang: state.lang }],
+    };
+  }
   const step = STEP_AFTER[event.type];
   if (!state.lessons || !step || state.taught.includes(step)) return { state, effects: [] };
   const { text, highlight } = explainStep(step, state.lessons, quotedVendorIds(state), state.lang);
@@ -430,7 +439,7 @@ export function reduce(state: CoreState, input: CoreInput): Out {
       const out: Out = { state: next, effects: [] };
       if (input.mode === "newcomer") {
         if (!next.lessons) return out;
-        return { state: next, effects: [{ kind: "avatar", state: "tutor" }, { kind: "teach_explain", text: intro(input.profile, next.lessons) }] };
+        return { state: next, effects: [{ kind: "avatar", state: "tutor" }, { kind: "teach_explain", text: intro(input.profile, next.lessons), highlight: "nav-week" }] };
       }
       return ask(out, { cardId: null, text: `Hi ${input.profile.name}, what are you working on today?` });
     }

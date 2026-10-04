@@ -8,9 +8,9 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] The step 2 intro says it's a test of whether Ari learned and can teach
-- [ ] Ari's first explanation points to the schedule, and the Week menu item glows (tested at the Core/teach seam)
-- [ ] Opening the Week screen leads to today's plan plus the top pattern, then to the purchase lesson (tested)
-- [ ] The existing teach tests still pass
+- [x] The step 2 intro says it's a test of whether Ari learned and can teach
+- [x] Ari's first explanation points to the schedule, and the Week menu item glows (tested at the Core/teach seam)
+- [x] Opening the Week screen leads to today's plan plus the top pattern, then to the purchase lesson (tested)
+- [x] The existing teach tests still pass

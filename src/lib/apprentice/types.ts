@@ -145,6 +145,7 @@ export type CoreState = {
   questionQueue: { cardId: string; text: string }[];
   lessons: Lessons | null;
   taught: StepId[]; // steps already explained to the newcomer
+  briefed: boolean; // the newcomer has had the schedule briefing
   warned: string[]; // intents already warned about (a second try goes through)
   busy: string[]; // why the expert is busy right now ("typing", "call")
   tapToHear: boolean;

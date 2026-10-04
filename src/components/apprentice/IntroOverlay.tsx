@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpenCheck, GraduationCap, MessageCircleQuestion, MousePointerClick, ShieldAlert, Sparkles, Languages, Eye } from "lucide-react";
+import { BookOpenCheck, CalendarDays, GraduationCap, MessageCircleQuestion, MousePointerClick, ShieldAlert, Sparkles, Languages, Eye } from "lucide-react";
 
 type Point = { icon: React.ReactNode; title: string; text: string };
 
@@ -17,16 +17,17 @@ const EXPERT: { kicker: string; title: string; lead: string; points: Point[]; ct
 };
 
 const NEWCOMER: typeof EXPERT = {
-  kicker: "You're the new hire",
-  title: "You're Sam, Northwind's new Procurement Manager.",
-  lead: "Maria, the expert, has left the office. You're the new employee in the same office simulator. Ari learned Maria's job by watching her, and now passes it down to you, starting with your first purchase: 30 office chairs.",
+  kicker: "Step 2 · Ari teaches the new employee",
+  title: "Now test whether Ari learned well, and whether it can teach.",
+  lead: "Maria, the expert, has left the office. You're Sam, the new employee, in the same office simulator. You'll learn from Ari: it starts with your schedule, because that shapes the whole job, then takes you through your first purchase, 30 office chairs.",
   points: [
+    { icon: <CalendarDays className="h-5 w-5" />, title: "Schedule first", text: "Your week, your day, and the patterns Ari spotted across Maria's week. Then the specifics." },
     { icon: <BookOpenCheck className="h-5 w-5" />, title: "Ari explains every step", text: "What to do, what Maria chose, and whether it's a rule or just Maria's style. The next button glows." },
     { icon: <Eye className="h-5 w-5" />, title: "Ask “why?” or say “Show me”", text: "Ari answers in Maria's own words, or takes the cursor and does the step for you." },
     { icon: <Languages className="h-5 w-5" />, title: "Try Spanish", text: "Ask a question in Spanish and Ari keeps teaching in Spanish." },
     { icon: <ShieldAlert className="h-5 w-5" />, title: "Try breaking the rule", text: "At the approval step, approve it yourself and see what Ari does." },
   ],
-  cta: "Start learning",
+  cta: "Start learning from Ari",
 };
 
 const WALKTHROUGH: typeof EXPERT = {
