@@ -1,5 +1,6 @@
 import type { TimedEvent, WorkspaceEvent } from "@/lib/workspace/events";
 import type { Profile } from "@/lib/workspace/profile";
+import type { AttentionRecord } from "@/lib/context/types";
 
 export type Mode = "expert" | "newcomer";
 export type Lang = "en-US" | "es-ES";
@@ -32,6 +33,7 @@ export type DecisionCard = {
   question?: string; // what Ari asked, if it asked
   howNotes: string[];
   at: number; // time of the first choice
+  attention?: AttentionRecord[]; // what the expert looked at before deciding (eye tracking), longest first
 };
 
 export type KnowledgeSource = "Online or public" | "Company document" | "Company system" | "Told by a person" | "Already a given";
@@ -81,6 +83,7 @@ export type JudgeContext = {
   request: { id: string; subject: string; body: string; budget: number; due: string };
   cards: DecisionCard[];
   task: TodayTask | null;
+  attention?: AttentionRecord[]; // eye tracking: what the expert read before this decision, longest first
 };
 
 export type JudgeResult =
@@ -110,7 +113,9 @@ export type CoreInput =
   | { kind: "review_correct"; cardId: string; text: string } 
   | { kind: "workspace_event"; event: WorkspaceEvent; at: number }
   | { kind: "utterance"; speaker: "expert" | "newcomer"; text: string; lang: string; at: number }
-  | { kind: "judge_result"; requestId: string; result: JudgeResult };
+  | { kind: "judge_result"; requestId: string; result: JudgeResult }
+  // Eye tracking (opt-in): one finished fixation on something on screen.
+  | { kind: "attention"; record: AttentionRecord; at: number };
 
 export type CoreEffect =
   | { kind: "upsert_card"; card: DecisionCard }
@@ -149,6 +154,8 @@ export type CoreState = {
   lang: Lang;
   ended: boolean;
   nextRequestId: number;
+  attention: AttentionRecord[]; // every fixation this session, in order
+  attentionMark: number; // attention[0..mark) is already on a decision card
 };
 
 // End of session: Ari checks the guesses it made while staying quiet.

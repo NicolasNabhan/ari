@@ -5,6 +5,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { northwind } from "@/lib/northwind/seed";
+import { describeAttention } from "@/lib/gaze/attention";
 import { REASON_TYPE_NAMES } from "./reasonTypes";
 import type { DecisionCard, JudgeCall, JudgeContext, JudgeResult } from "./types";
 
@@ -34,7 +35,7 @@ function describe(card: DecisionCard) {
     .map((o) => `${o.id} = ${o.label} [${o.status}]`)
     .join("; ")}. The expert chose: ${chosen?.label ?? card.chosen}.${card.previousChoices.length ? ` They first picked ${card.previousChoices.join(", then ")}.` : ""}${
     card.prediction ? ` Ari had predicted "${card.prediction.optionId}" (${card.prediction.correct ? "correct" : "wrong"}).` : ""
-  }${card.howNotes.length ? ` Observed: ${card.howNotes.join("; ")}.` : ""}`;
+  }${card.howNotes.length ? ` Observed: ${card.howNotes.join("; ")}.` : ""}${card.attention?.length ? ` Eye tracking, before deciding: ${describeAttention(card.attention, 4)}.` : ""}`;
 }
 
 function situation(ctx: JudgeContext) {
@@ -42,7 +43,9 @@ function situation(ctx: JudgeContext) {
 Today's task (their words): ${ctx.task?.text ?? "not given"}.
 Request: ${ctx.request.subject}. "${ctx.request.body}" Budget $${ctx.request.budget}, due ${ctx.request.due}.
 Decisions so far:
-${ctx.cards.map((c) => `- ${describe(c)}${c.reason ? ` Reason (${c.reason.source}): ${c.reason.text}` : ""}`).join("\n") || "- none"}`;
+${ctx.cards.map((c) => `- ${describe(c)}${c.reason ? ` Reason (${c.reason.source}): ${c.reason.text}` : ""}`).join("\n") || "- none"}${
+    ctx.attention?.length ? `\nWhat the expert just read (webcam eye tracking, dwell time per thing on screen): ${describeAttention(ctx.attention, 5)}.` : ""
+  }`;
 }
 
 const Predict = z.object({ optionId: z.string() });
@@ -94,7 +97,7 @@ export async function claudeJudge(call: JudgeCall): Promise<JudgeResult> {
     case "assess": {
       const r = await ask(
         Assess,
-        `${situation(call.context)}\n\nNew decision: ${describe(call.card)}\nCan Ari explain this choice itself from what it knows? Only claim high confidence if the evidence really explains it. A choice can be usual and still unexplained (e.g. picking between two equally fine options). If the decision is a number the expert typed (like a vendor score), the question is where that number comes from and what knowledge produces it.`,
+        `${situation(call.context)}\n\nNew decision: ${describe(call.card)}\nCan Ari explain this choice itself from what it knows? Only claim high confidence if the evidence really explains it. A choice can be usual and still unexplained (e.g. picking between two equally fine options). If the decision is a number the expert typed (like a vendor score), the question is where that number comes from and what knowledge produces it. If eye tracking shows what they read before deciding, use it as evidence (with the dwell time) and make the question specific to it, e.g. "You spent a while on Apex's late deliveries: is that why you picked Brightline?"`,
       );
       return { kind: "assess", ...r, confidence: Math.max(0, Math.min(1, r.confidence)) };
     }

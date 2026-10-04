@@ -37,7 +37,7 @@ export function RequestQueue({
     <section className="space-y-6">
       <PageTitle icon={ClipboardList} title="Purchase requests" subtitle="Everything waiting for procurement" tone="amber" />
       {open && (
-        <div className="ari-rise overflow-hidden rounded-3xl border border-zinc-200/70 bg-white shadow-sm">
+        <div data-ari={`request-detail-${open.id}`} data-gaze-label={`Request: ${open.subject}`} className="ari-rise overflow-hidden rounded-3xl border border-zinc-200/70 bg-white shadow-sm">
           <div className="flex items-start gap-3 bg-gradient-to-r from-amber-50 to-coral-400/10 p-5">
             <PersonAvatar name={person(open.from)?.name ?? "?"} />
             <div>
@@ -85,6 +85,7 @@ export function RequestQueue({
               <tr
                 key={r.id}
                 data-ari={`request-${r.id}`}
+                data-gaze-label={`Request list: ${r.subject}`}
                 onClick={() => onOpen(r.id)}
                 className={`cursor-pointer border-t border-zinc-100 transition-colors hover:bg-ari-50/50 ${r.id === openRequestId ? "bg-ari-50" : ""}`}
               >

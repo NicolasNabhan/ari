@@ -75,6 +75,7 @@ export function Vendors({
             <div
               key={v.id}
               data-ari={`vendor-${v.id}`}
+              data-gaze-label={quoted.includes(v.id) ? `${v.name} quote` : `${v.name} profile`}
               className={`rounded-2xl border bg-white p-4 shadow-sm transition-all ${isSelected ? "border-ari-400 ring-4 ring-ari-100" : "border-zinc-200/70"}`}
             >
               <div className="flex items-start gap-3">
@@ -135,7 +136,7 @@ export function Vendors({
                 )}
               </div>
               {historyFor === v.id && (
-                <div className="ari-rise mt-3 rounded-xl bg-zinc-50 p-3 text-sm">
+                <div data-ari={`history-panel-${v.id}`} data-gaze-label={`${v.name} delivery history`} className="ari-rise mt-3 rounded-xl bg-zinc-50 p-3 text-sm">
                   {v.deliveryHistory.length === 0 ? (
                     <p className="flex items-center gap-2 text-zinc-500">
                       <Sprout className="h-4 w-4" /> No orders with us yet.

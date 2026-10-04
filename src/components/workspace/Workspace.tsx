@@ -26,6 +26,7 @@ import {
   MessagesSquare,
   MousePointerClick,
   PhoneOff,
+  ScanEye,
   ScrollText,
   Sparkles,
   Stamp,
@@ -50,6 +51,9 @@ import { useRecording } from "@/lib/workspace/useRecording";
 import { ReviewList } from "@/components/apprentice/ReviewList";
 import { ProcedureView } from "@/components/apprentice/ProcedureView";
 import { AriProvider } from "@/components/ari/AriProvider";
+import { useGaze } from "@/components/gaze/useGaze";
+import { GazeControl, GazeDot } from "@/components/gaze/GazeControl";
+import { AttentionReview } from "@/components/gaze/AttentionReview";
 
 export function Workspace({ audience, lessons, guided = false }: { audience: Audience; lessons?: Lessons; guided?: boolean }) {
   return (
@@ -88,7 +92,7 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
   const [callWith, setCallWith] = useState<string | null>(null);
   const [showLog, setShowLog] = useState(false);
   const [started, setStarted] = useState(false);
-  const { cards, task, teachingStep, allow, askWhy, showMe, lang, tapToHear, setTapToHear, questionWaiting, hearQuestion, review } = useApprentice(
+  const { cards, task, teachingStep, allow, askWhy, showMe, lang, tapToHear, setTapToHear, questionWaiting, hearQuestion, review, attend } = useApprentice(
     bus,
     profile,
     audience,
@@ -97,6 +101,9 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
   );
   const teaching = audience === "newcomer";
   useRecording(!!profile);
+  // Eye tracking: opt-in, expert only, while the session runs.
+  const gaze = useGaze({ screen, enabled: !teaching && started && !review.ended, onRecord: attend });
+  const [gazeReview, setGazeReview] = useState<"auto" | "open" | "closed">("auto");
 
   useEffect(() => {
     // Browser storage is only readable after mount.
@@ -182,7 +189,7 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
   const userName = profile.name;
   return (
     <div className="flex min-h-screen flex-col text-zinc-900">
-      <header className="sticky top-0 z-30 flex h-[60px] items-center justify-between gap-4 border-b border-white/60 bg-white/80 px-5 backdrop-blur">
+      <header data-gaze-ignore="" className="sticky top-0 z-30 flex h-[60px] items-center justify-between gap-4 border-b border-white/60 bg-white/80 px-5 backdrop-blur">
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2" title="Back to start">
             <span className="grid h-8 w-8 place-items-center rounded-xl text-white shadow-md shadow-ari-500/30 ari-gradient-animated">
@@ -210,6 +217,12 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
               <PhoneOff className="h-4 w-4" /> End call with {northwind.people.find((p) => p.id === callWith)?.name.split(" ")[0]}
             </button>
           )}
+          {!teaching && started && !review.ended && <GazeControl gaze={gaze} />}
+          {review.ended && gaze.records.length > 0 && (
+            <button data-ari="gaze-replay" onClick={() => setGazeReview("open")} className="ari-rise ari-lift flex items-center gap-1.5 rounded-full border border-ari-200 bg-white px-3 py-1.5 font-medium text-ari-700">
+              <ScanEye className="h-4 w-4" /> Where your eyes went
+            </button>
+          )}
           {!teaching && started && (
             <label className="flex cursor-pointer items-center gap-1.5 rounded-full px-2 py-1 text-zinc-600 hover:bg-zinc-100" title="Ari shows a signal instead of speaking up; tap it when you're ready">
               <input data-ari="tap-to-hear" type="checkbox" className="accent-[var(--color-ari-600)]" checked={tapToHear} onChange={(e) => setTapToHear(e.target.checked)} />
@@ -235,7 +248,7 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
         </div>
       </header>
       <div className="flex flex-1">
-        <nav className="w-[4.5rem] shrink-0 p-3 xl:w-56">
+        <nav data-gaze-ignore="" className="w-[4.5rem] shrink-0 p-3 xl:w-56">
           <ul className="ari-stagger space-y-1">
             {NAV.map(({ screen: s, label, icon: Icon }) => (
               <li key={s}>
@@ -308,7 +321,7 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
           {screen === "week" && <WeekView audience={audience} />}
           {screen === "context" && <ContextHub audience={audience} />}
         </main>
-        <aside className="w-80 shrink-0 2xl:w-[22rem] space-y-5 overflow-y-auto border-l border-white/60 bg-white/50 p-4 pb-96 backdrop-blur">
+        <aside data-gaze-ignore="" className="w-80 shrink-0 2xl:w-[22rem] space-y-5 overflow-y-auto border-l border-white/60 bg-white/50 p-4 pb-96 backdrop-blur">
           {teaching ? (
             <>
               {started && (
@@ -326,12 +339,12 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
               {lessons && (
                 <>
                   <ProcedureView lessons={lessons} />
-                  <DecisionCards title={`${lessons.expert}'s playbook`} cards={lessons.cards} activeStep={teachingStep} />
+                  <DecisionCards title={`${lessons.expert}'s playbook`} cards={lessons.cards} activeStep={teachingStep} expert={lessons.expert} />
                 </>
               )}
             </>
           ) : (
-            <DecisionCards cards={cards} />
+            <DecisionCards cards={cards} expert={profile.name} />
           )}
           <div>
             <button onClick={() => setShowLog(!showLog)} className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-600">
@@ -355,6 +368,10 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
           onCorrect={review.correct}
           onDone={review.skip}
         />
+      )}
+      <GazeDot on={gaze.active && gaze.showDot} mouse={gaze.mode === "mouse"} dot={gaze.setDot} />
+      {review.ended && gaze.records.length > 0 && gazeReview !== "closed" && (gazeReview === "open" || !review.list) && (
+        <AttentionReview records={gaze.records} expert={profile.name} onClose={() => setGazeReview("closed")} />
       )}
       {questionWaiting && (
         <button

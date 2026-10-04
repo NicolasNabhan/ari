@@ -2,6 +2,7 @@
 // (state, input) → (state, effects). No network; judgment goes out as
 // judge_request effects and comes back as judge_result inputs.
 import { northwind } from "@/lib/northwind/seed";
+import { summarize } from "@/lib/gaze/attention";
 import { howNotes } from "./howNotes";
 import { choiceFor, nextStepAfter, request, type Step } from "./normalMap";
 import { answerWhy, brokenGuardrail, explainStep, intro, isSpanish, isWhyQuestion, showMe } from "./teach";
@@ -35,6 +36,8 @@ export function initialState(): CoreState {
     review: null,
     lang: "en-US",
     ended: false,
+    attention: [],
+    attentionMark: 0,
   };
 }
 
@@ -51,13 +54,28 @@ export function matchTask(text: string): string | null {
   return best?.id ?? null;
 }
 
-function context(state: CoreState, requestId: string): JudgeContext {
+// Eye tracking: what the expert looked at that isn't on a card yet.
+const unattributed = (state: CoreState) => state.attention.slice(state.attentionMark);
+
+function context(state: CoreState, requestId: string, card?: DecisionCard): JudgeContext {
   const r = request(requestId)!;
+  const attention = card ? card.attention ?? [] : summarize(unattributed(state), 5);
   return {
     profile: state.profile,
     request: { id: r.id, subject: r.subject, body: r.body, budget: r.budget, due: r.due },
     cards: state.cardOrder.map((id) => state.cards[id]),
     task: state.task,
+    ...(attention.length ? { attention } : {}),
+  };
+}
+
+// Attach what the expert looked at since the last decision to this one.
+function withAttention(state: CoreState, card: DecisionCard): { state: CoreState; card: DecisionCard } {
+  const fresh = unattributed(state);
+  if (!fresh.length) return { state, card };
+  return {
+    state: { ...state, attentionMark: state.attention.length },
+    card: { ...card, attention: summarize([...(card.attention ?? []), ...fresh], 5) },
   };
 }
 
@@ -167,7 +185,7 @@ function onWorkspaceEvent(state: CoreState, input: Extract<CoreInput, { kind: "w
     const id = cardId(choice.step.requestId, choice.step.stepId);
     const existing = out.state.cards[id];
     if (existing?.chosen !== choice.chosen) {
-      const card = withPrediction(
+      const predicted = withPrediction(
         {
           ...existing,
           id,
@@ -183,8 +201,10 @@ function onWorkspaceEvent(state: CoreState, input: Extract<CoreInput, { kind: "w
         },
         out.state.predictions[id],
       );
-      out = putCard(out, card);
-      if (!existing) out = judge(out, id, { kind: "assess", card, context: context(out.state, card.requestId) });
+      const looked = withAttention(out.state, predicted);
+      const card = looked.card;
+      out = putCard({ ...out, state: looked.state }, card);
+      if (!existing) out = judge(out, id, { kind: "assess", card, context: context(out.state, card.requestId, card) });
     }
   }
 
@@ -440,5 +460,8 @@ export function reduce(state: CoreState, input: CoreInput): Out {
       return onUtterance(state, input);
     case "judge_result":
       return onJudgeResult(state, input);
+    case "attention":
+      if (state.mode !== "expert" || state.ended || input.record.ms <= 0) return { state, effects: [] };
+      return { state: { ...state, attention: [...state.attention, input.record] }, effects: [] };
   }
 }
