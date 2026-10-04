@@ -79,6 +79,7 @@ export const TalkingHeadFace = forwardRef<FaceHandle, { onReady?: () => void; on
           cameraRotateEnable: false,
           cameraZoomEnable: false,
           cameraPanEnable: false,
+          mixerGainSpeech: 2.2, // Ari's voice is recorded quieter than Maria's
         });
         await h.showAvatar({ url: "/avatars/ari.glb", body: "F", avatarMood: "happy", lipsyncLang: "en" });
         if (cancelled) return;
