@@ -4,8 +4,8 @@ export const dynamic = "force-dynamic";
 
 // Stock ElevenLabs voices; override per speaker with ELEVENLABS_VOICE_ARI / ELEVENLABS_VOICE_MARIA.
 const DEFAULT_VOICES: Record<string, string> = {
-  ari: "jBpfuIE2acCO8z3wKNLl", // playful
-  maria: "EXAVITQu4vr4xnSDxMaL", // younger adult woman
+  ari: "XjGYkUkzth8BPs29fmcV", // Teddy Twinkle: a cute little cartoon character, for Ari the robot
+  maria: "EXAVITQu4vr4xnSDxMaL", // Sarah: a confident, reassuring woman
 };
 
 export async function POST(request: Request) {
