@@ -1,11 +1,27 @@
-import { ChevronRight, Inbox as InboxIcon, Paperclip } from "lucide-react";
+import { ArrowRight, CalendarDays, ChevronRight, Inbox as InboxIcon, Paperclip } from "lucide-react";
 import { person, type PurchaseRequest } from "@/lib/northwind/seed";
 import { PageTitle, PersonAvatar } from "./PageTitle";
 
-export function Inbox({ requests, onOpen }: { requests: PurchaseRequest[]; onOpen: (id: string) => void }) {
+export function Inbox({ requests, onOpen, onOpenPlan }: { requests: PurchaseRequest[]; onOpen: (id: string) => void; onOpenPlan?: () => void }) {
   return (
     <section>
       <PageTitle icon={InboxIcon} title="Inbox" subtitle={`${requests.length} new purchase request${requests.length === 1 ? "" : "s"}`} />
+      {onOpenPlan && (
+        <button
+          data-ari="open-plan"
+          onClick={onOpenPlan}
+          className="ari-lift ari-rise mb-4 flex w-full items-center gap-3 rounded-2xl p-4 text-left text-white shadow-lg shadow-ari-500/25 ari-gradient"
+        >
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/20">
+            <CalendarDays className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold">Your plan is ready</span>
+            <span className="block text-sm text-white/85">Your week, your day, and how each task works, built from Maria&apos;s week.</span>
+          </span>
+          <ArrowRight className="h-5 w-5" />
+        </button>
+      )}
       <ul className="ari-stagger space-y-3">
         {requests.map((r) => (
           <li key={r.id}>
