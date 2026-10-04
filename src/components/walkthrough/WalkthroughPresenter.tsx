@@ -37,7 +37,7 @@ export function WalkthroughPresenter({
   useEffect(() => {
     ariRef.current = ari;
   }, [ari]);
-  const voice = useRef(voiceOnly(0.6)); // until her face has loaded
+  const voice = useRef(voiceOnly(1)); // until her face has loaded
   const speakingRef = useRef(onMariaSpeaking);
   useEffect(() => {
     speakingRef.current = onMariaSpeaking;
@@ -53,8 +53,10 @@ export function WalkthroughPresenter({
   });
   useEffect(() => {
     const { bubble, kind } = line.current;
+    // A button press cuts off whoever is still talking.
     voice.current.stop();
     mariaFace.current?.stop();
+    ariRef.current.hush();
     speakingRef.current(false);
     if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
     if (!bubble) {

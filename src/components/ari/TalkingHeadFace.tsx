@@ -34,15 +34,18 @@ export const TalkingHeadFace = forwardRef<FaceHandle, { onReady?: () => void; on
   const node = useRef<HTMLDivElement>(null);
   const head = useRef<TalkingHead | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const generation = useRef(0); // bumps on stop(), so a line still loading never starts late
 
   useImperativeHandle(ref, () => ({
     ready: () => !!head.current,
     async speakAudio(audioBase64, alignment) {
       const h = head.current;
       if (!h) throw new Error("face not ready");
+      const gen = generation.current;
       const bytes = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
       if (h.audioCtx.state === "suspended") await h.audioCtx.resume();
       const audio = await h.audioCtx.decodeAudioData(bytes.buffer);
+      if (gen !== generation.current) return;
       h.lookAtCamera(500);
       h.speakAudio({ audio, ...wordsFromAlignment(alignment) }, { lipsyncLang: "en" });
       await new Promise((r) => setTimeout(r, audio.duration * 1000 + 250));
@@ -63,6 +66,7 @@ export const TalkingHeadFace = forwardRef<FaceHandle, { onReady?: () => void; on
       h.speakAudio({ words, wtimes, wdurations }, { lipsyncLang: "en" });
     },
     stop() {
+      generation.current++;
       head.current?.stopSpeaking();
     },
   }));

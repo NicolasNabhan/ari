@@ -17,6 +17,7 @@ type Ari = {
   caption: string | null;
   speaking: boolean;
   say: (text: string, lang?: string) => Promise<void>;
+  hush: () => void; // stop talking now, including a line still loading
   // Resolves with what the person said out loud, or typed into the answer box.
   listen: (lang?: string) => Promise<string>;
   listening: boolean;
@@ -58,6 +59,13 @@ export function AriProvider({
     // A newer line may have cut this one off; only the newest one stops the face.
     if (id !== latest.current) return;
     faceRef.current?.stop();
+    setSpeaking(false);
+  }, []);
+
+  const hush = useCallback(() => {
+    latest.current++;
+    faceRef.current?.stop();
+    if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
     setSpeaking(false);
   }, []);
 
@@ -105,8 +113,8 @@ export function AriProvider({
   );
 
   const value = useMemo<Ari>(
-    () => ({ state, setState, face, caption, speaking, say, listen, listening, simulateStreamFailure: () => setStreamFailed(true) }),
-    [state, face, caption, speaking, say, listen, listening],
+    () => ({ state, setState, face, caption, speaking, say, hush, listen, listening, simulateStreamFailure: () => setStreamFailed(true) }),
+    [state, face, caption, speaking, say, hush, listen, listening],
   );
 
   return (

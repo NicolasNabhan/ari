@@ -16,17 +16,20 @@ export const RobotAri = forwardRef<FaceHandle, { size: number; speaking: boolean
 ) {
   const ctx = useRef<AudioContext | null>(null);
   const source = useRef<AudioBufferSourceNode | null>(null);
+  const generation = useRef(0); // bumps on stop(), so a line still loading never starts late
   const [happy, setHappy] = useState(false);
   const [pulse, setPulse] = useState(0); // bumps on each spoken word (browser voice)
 
   useImperativeHandle(ref, () => ({
     ready: () => true,
     async speakAudio(audioBase64) {
+      const gen = generation.current;
       ctx.current ??= new AudioContext();
       const ac = ctx.current;
       if (ac.state === "suspended") await ac.resume();
       const bytes = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
       const buffer = await ac.decodeAudioData(bytes.buffer);
+      if (gen !== generation.current) return;
       source.current?.stop();
       const src = ac.createBufferSource();
       const gain = ac.createGain();
@@ -42,6 +45,7 @@ export const RobotAri = forwardRef<FaceHandle, { size: number; speaking: boolean
     mouthWord: () => setPulse((p) => p + 1),
     mouth: () => setPulse((p) => p + 1),
     stop: () => {
+      generation.current++;
       try {
         source.current?.stop();
       } catch {
