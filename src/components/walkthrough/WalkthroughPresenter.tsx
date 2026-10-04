@@ -36,21 +36,28 @@ export function WalkthroughPresenter({
   const bubble = view.bubble;
 
   // Speak the line at this position, cutting off whatever was still playing.
+  // Only a new position starts a line: each of Maria's clicks re-renders the
+  // view, and that mustn't restart what she's saying.
+  const line = useRef({ bubble, kind: view.beat.kind });
   useEffect(() => {
+    line.current = { bubble, kind: view.beat.kind };
+  });
+  useEffect(() => {
+    const { bubble, kind } = line.current;
     maria.current.stop();
     if (!bubble) {
       ariRef.current.setState("bubble");
       return;
     }
     if (bubble.speaker === "ari") {
-      if (view.beat.kind === "ari-asks") sounds.question();
+      if (kind === "ari-asks") sounds.question();
       ariRef.current.setState("forward");
       void ariRef.current.say(bubble.text);
     } else {
       ariRef.current.setState("bubble");
       void speak(maria.current, bubble.text, { speaker: "maria" });
     }
-  }, [view.position, bubble, view.beat.kind]);
+  }, [view.position]);
 
   // Maria's clicks: her cursor glides to each target, the strip around it
   // stays bright while the rest dims, she clicks, and the screen updates.

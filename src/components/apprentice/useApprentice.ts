@@ -59,6 +59,7 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
     }
   }, []);
   const dispatchRef = useRef<(input: CoreInput) => CoreEffect[]>(() => []);
+  const focusToken = useRef(0); // bumps whenever the focus should not come back
   const langRef = useRef<Lang>("en-US");
   const [lang, setLang] = useState<Lang>("en-US");
 
@@ -104,18 +105,26 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
           sounds.success();
           setTask(effect.task);
           break;
-        case "teach_explain":
+        case "teach_explain": {
           if (effect.stepId) setTeachingStep(effect.stepId);
-          if (effect.highlight) highlight(effect.highlight);
-          ariRef.current.say(effect.text, effect.lang ?? langRef.current);
+          // Everything stays normal while Ari talks; the focus lands on the
+          // next thing to click once it has said so (unless things moved on).
+          const token = ++focusToken.current;
+          clearHighlight();
+          void ariRef.current.say(effect.text, effect.lang ?? langRef.current).then(() => {
+            if (effect.highlight && token === focusToken.current) highlight(effect.highlight);
+          });
           break;
+        }
         case "warn_guardrail":
           sounds.warning();
+          focusToken.current++;
           clearHighlight();
           ariRef.current.setState("forward");
           ariRef.current.say(effect.text, langRef.current).then(() => ariRef.current.setState("tutor"));
           break;
         case "drive_cursor":
+          focusToken.current++;
           clearHighlight();
           driveCursor(effect.actions);
           break;
@@ -156,6 +165,7 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
     dispatch({ kind: "set_tap_to_hear", on: tapRef.current });
     dispatch({ kind: "session_start", profile, mode, lessons: mode === "newcomer" ? lessons : undefined });
     const unsubscribe = bus.subscribe(({ event, at }) => {
+      focusToken.current++;
       clearHighlight();
       dispatch({ kind: "workspace_event", event, at });
     });
