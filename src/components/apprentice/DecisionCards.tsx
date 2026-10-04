@@ -1,6 +1,7 @@
 import { BookOpen, Check, CircleCheck, Circle, CircleX, Eye, FileWarning, Lightbulb, Palette, Quote, ShieldAlert, Sparkles, type LucideIcon } from "lucide-react";
 import { levelOf, type Level } from "@/lib/apprentice/reasonTypes";
 import { isUnwritten } from "@/lib/apprentice/teach";
+import { SourcedKnowledge } from "@/components/context/SourcedKnowledge";
 import type { DecisionCard, KnowledgeItem, OptionStatus, Reason } from "@/lib/apprentice/types";
 
 const LEVEL: Record<Level, { label: string; icon: LucideIcon; className: string } | null> = {
@@ -88,6 +89,7 @@ export function DecisionCards({
                 )}
                 {card.reason && <ReasonView reason={card.reason} />}
                 {card.knowledge && card.knowledge.length > 0 && <KnowledgeView items={card.knowledge} />}
+                <SourcedKnowledge stepId={card.stepId} withHeader={!card.knowledge?.length} />
                 {card.howNotes.length > 0 && (
                   <ul data-ari="how-notes" className="mt-2 space-y-0.5 border-l-2 border-zinc-100 pl-2 text-xs text-zinc-500">
                     {card.howNotes.map((n) => (
