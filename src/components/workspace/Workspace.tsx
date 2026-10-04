@@ -54,6 +54,7 @@ import { ProcedureView } from "@/components/apprentice/ProcedureView";
 import { AriProvider } from "@/components/ari/AriProvider";
 import { WalkthroughPresenter } from "@/components/walkthrough/WalkthroughPresenter";
 import { MariaPortrait } from "@/components/walkthrough/MariaPortrait";
+import { TourCallout } from "@/components/walkthrough/TourCallout";
 import type { FaceHandle } from "@/components/ari/TalkingHeadFace";
 import { SCRIPT } from "@/lib/walkthrough/script";
 import { navigate, replayTo, type NavAction } from "@/lib/walkthrough/replay";
@@ -80,6 +81,24 @@ export function Workspace({
     </EventBusProvider>
   );
 }
+
+// The opening tour of step 1, in writing.
+const TOUR = {
+  ari: {
+    target: "ari-robot",
+    kicker: "Meet the learner · 1 of 2",
+    title: "This is Ari, our program",
+    text: "A little learner bot. It watches an expert work, works out why they make each choice, asks \u201cwhy?\u201d only when it can\u2019t tell, and later teaches the next person everything it learned.",
+    button: "Next",
+  },
+  maria: {
+    target: "maria-portrait",
+    kicker: "Meet the expert · 2 of 2",
+    title: "This is Maria, the expert simulator",
+    text: "She plays a veteran Procurement Manager, working just as a real expert would. Ari is about to watch her handle a purchase, from the request to the purchase order.",
+    button: "Let\u2019s start",
+  },
+} as const;
 
 const NAV: { screen: Screen; label: string; icon: LucideIcon }[] = [
   { screen: "inbox", label: "Inbox", icon: InboxIcon },
@@ -128,6 +147,16 @@ function WorkspaceShell({ audience, lessons, guided, walkthrough }: { audience: 
   const scores = wt ? wt.workspace.scores : scoresLocal;
   const routes = wt ? wt.workspace.routes : routesLocal;
   const issued = wt ? wt.workspace.issued : issuedLocal;
+  // Step 1 opens with a short written tour (Ari, then Maria), and explains the
+  // first decision card the moment it appears.
+  const [tour, setTour] = useState<"ari" | "maria" | "done">("ari");
+  const [cardTip, setCardTip] = useState<"waiting" | "show" | "done">("waiting");
+  const firstCard = !!wt?.cards.length;
+  useEffect(() => {
+    if (!firstCard || cardTip !== "waiting") return;
+    const t = setTimeout(() => setCardTip("show"), 1200);
+    return () => clearTimeout(t);
+  }, [firstCard, cardTip]);
   const [sent, setSent] = useState<SentMessage[]>([]);
   const [callWith, setCallWith] = useState<string | null>(null);
   const [showLog, setShowLog] = useState(false);
@@ -430,7 +459,24 @@ function WorkspaceShell({ audience, lessons, guided, walkthrough }: { audience: 
         </div>
       )}
       {wt && started && <MariaPortrait faceRef={mariaFace} speaking={mariaSpeaking} leaving={wt.beat.kind === "handover"} />}
-      {wt && started && !sidePanel && (
+      {wt && started && tour !== "done" && (
+        <TourCallout
+          key={tour}
+          {...TOUR[tour]}
+          onNext={() => setTour(tour === "ari" ? "maria" : "done")}
+        />
+      )}
+      {wt && cardTip === "show" && wt.cards[0] && (
+        <TourCallout
+          target={`card-${wt.cards[0].stepId}`}
+          kicker="What Ari learned"
+          title="Every decision becomes a card"
+          text="When Maria makes a choice, Ari writes it down: what she chose, why, and what kind of knowledge it is: a rule she must follow, strong advice, or her own personal choice. Anything that isn't in the written procedure gets an Unwritten rule label."
+          button="Got it"
+          onNext={() => setCardTip("done")}
+        />
+      )}
+      {wt && started && tour === "done" && !sidePanel && (
         <WalkthroughPresenter view={wt} onNavigate={walk} onClicksShown={setClicksShown} mariaFace={mariaFace} onMariaSpeaking={setMariaSpeaking} />
       )}
       {guided && !teaching && started && <CoachBar task={task} cards={cards} ended={review.ended} screen={screen} />}

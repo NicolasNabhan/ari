@@ -70,7 +70,7 @@ export const RobotAri = forwardRef<FaceHandle, { size: number; speaking: boolean
 
   const eyesHappy = happy && !listening;
   return (
-    <div className="robot-ari pointer-events-none select-none" style={{ width: size, height: size * 1.2 }} data-speaking={speaking} data-listening={listening}>
+    <div data-ari="ari-robot" className="robot-ari pointer-events-none select-none" style={{ width: size, height: size * 1.2 }} data-speaking={speaking} data-listening={listening}>
       <div className="robot-hover h-full w-full">
         <svg viewBox="0 0 200 240" className="h-full w-full overflow-visible" aria-label="Ari">
           <defs>
