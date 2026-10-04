@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Calculator, FileSpreadsheet } from "lucide-react";
 import { quoteFor, vendor, type PurchaseRequest } from "@/lib/northwind/seed";
+import { PageTitle } from "./PageTitle";
 
 const usd = (n: number) => `$${n.toLocaleString("en-US")}`;
 
@@ -17,8 +19,8 @@ export function ScoringSheet({
   onScore: (vendorId: string, score: number) => void;
 }) {
   const [draft, setDraft] = useState<Record<string, string>>({});
-  if (!request) return <p className="text-zinc-500">Open a purchase request first.</p>;
-  if (quoted.length === 0) return <p className="text-zinc-500">Request quotes first; vendors appear here once they&rsquo;ve quoted.</p>;
+  if (!request) return <p className="mt-10 text-center text-zinc-500">Open a purchase request first.</p>;
+  if (quoted.length === 0) return <p className="mt-10 text-center text-zinc-500">Request quotes first; vendors appear here once they&rsquo;ve quoted.</p>;
 
   function commit(vendorId: string) {
     const value = Number(draft[vendorId]);
@@ -29,15 +31,17 @@ export function ScoringSheet({
 
   return (
     <section>
-      <h1 className="text-xl font-semibold">Vendor scoring · {request.subject}</h1>
-      <p className="mt-1 text-sm text-zinc-500">Shared sheet with Finance. Score each vendor 0–100.</p>
-      <table className="mt-4 w-full rounded-xl border bg-white text-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <thead className="bg-zinc-50 text-left text-zinc-500 dark:bg-zinc-800">
+      <PageTitle icon={Calculator} title="Vendor scoring" subtitle="Shared sheet with Finance · score each vendor from 0 to 100" tone="sky" />
+      <div className="mb-3 flex items-center gap-2 text-sm text-zinc-500">
+        <FileSpreadsheet className="h-4 w-4 text-sky-500" /> {request.subject}
+      </div>
+      <table className="ari-rise w-full overflow-hidden rounded-2xl border border-zinc-200/70 bg-white text-sm shadow-sm">
+        <thead className="bg-zinc-50 text-left text-xs uppercase tracking-wider text-zinc-500">
           <tr>
-            <th className="px-4 py-2">Vendor</th>
-            <th className="px-4 py-2">Quote</th>
-            <th className="px-4 py-2">Lead time</th>
-            <th className="px-4 py-2">Score</th>
+            <th className="px-4 py-3">Vendor</th>
+            <th className="px-4 py-3">Quote</th>
+            <th className="px-4 py-3">Lead time</th>
+            <th className="px-4 py-3">Score</th>
           </tr>
         </thead>
         <tbody>
@@ -45,14 +49,14 @@ export function ScoringSheet({
             const q = quoteFor(id, request.id)!;
             return (
               <tr key={id} className="border-t dark:border-zinc-800">
-                <td className="px-4 py-2 font-medium">{vendor(id)?.name}</td>
-                <td className="px-4 py-2">{usd(q.total)}</td>
-                <td className="px-4 py-2">{q.leadTimeDays} days</td>
-                <td className="px-4 py-2">
+                <td className="px-4 py-3 font-medium">{vendor(id)?.name}</td>
+                <td className="px-4 py-3">{usd(q.total)}</td>
+                <td className="px-4 py-3">{q.leadTimeDays} days</td>
+                <td className="px-4 py-3">
                   <input
                     data-ari={`score-${id}`}
                     inputMode="numeric"
-                    className="w-20 rounded border px-2 py-1 dark:border-zinc-700 dark:bg-zinc-950"
+                    className="w-24 rounded-xl border border-sky-200 bg-sky-50/50 px-3 py-1.5 text-center font-semibold text-sky-900 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
                     value={draft[id] ?? scores[id]?.toString() ?? ""}
                     onChange={(e) => setDraft((d) => ({ ...d, [id]: e.target.value }))}
                     onBlur={() => commit(id)}

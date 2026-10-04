@@ -10,7 +10,7 @@ export function ProcedureView({ lessons }: { lessons: Lessons }) {
   const procedure = compileProcedure(lessons);
   return (
     <>
-      <button data-ari="view-procedure" onClick={() => setOpen(true)} className="text-xs text-indigo-600 underline dark:text-indigo-300">
+      <button data-ari="view-procedure" onClick={() => setOpen(true)} className="text-xs text-ari-600 underline dark:text-ari-200">
         View the procedure Ari compiled
       </button>
       {open && (

@@ -1,8 +1,11 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { browserListenOnce, browserSpeak, canListen } from "@/lib/ari/browserVoice";
-import { chooseFace, type AvatarState, type FaceChoice } from "@/lib/ari/face";
+import { browserSpeak, listenForAnswer, MIC_PROBLEM_TEXT } from "@/lib/ari/browserVoice";
+import { Sparkles } from "lucide-react";
+import { VoicePanel } from "./VoicePanel";
+import { sounds } from "@/lib/ari/sounds";
+import { chooseFace, type Alignment, type AvatarState, type FaceChoice } from "@/lib/ari/face";
 import { TalkingHeadFace, type FaceHandle } from "./TalkingHeadFace";
 
 type Ari = {
@@ -45,8 +48,23 @@ export function AriProvider({ children, initialState = "bubble" }: React.PropsWi
     const id = ++latest.current;
     setCaption(text);
     setSpeaking(true);
-    faceRef.current?.mouth(text, 1, lang.slice(0, 2));
-    await browserSpeak(text, lang);
+    if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
+    faceRef.current?.stop();
+    const face = faceRef.current;
+
+    // 1. ElevenLabs voice: real audio with exact word timings → precise lip-sync.
+    const voiced = face?.ready() ? await elevenLabsSpeech(text, lang) : null;
+    if (id !== latest.current) return; // a newer line started meanwhile
+    if (voiced && face) {
+      try {
+        await face.speakAudio(voiced.audio, voiced.alignment);
+      } catch {
+        await speakWithBrowser(text, lang, face);
+      }
+    } else {
+      // 2. Browser voice: move the mouth word by word, as each word is spoken.
+      await speakWithBrowser(text, lang, face);
+    }
     // A newer line may have cut this one off; only the newest one stops the face.
     if (id !== latest.current) return;
     faceRef.current?.stop();
@@ -54,6 +72,8 @@ export function AriProvider({ children, initialState = "bubble" }: React.PropsWi
   }, []);
 
   const [listening, setListening] = useState(false);
+  const [heard, setHeard] = useState("");
+  const [micProblem, setMicProblem] = useState<string | null>(null);
   const answer = useRef<{ resolve: (text: string) => void; stopMic: () => void; lang: string } | null>(null);
 
   const finish = useCallback((text: string) => {
@@ -61,24 +81,33 @@ export function AriProvider({ children, initialState = "bubble" }: React.PropsWi
     if (!pending || !text.trim()) return;
     answer.current = null;
     pending.stopMic();
+    sounds.micOff();
     setListening(false);
+    setHeard("");
     pending.resolve(text.trim());
   }, []);
 
+  // The microphone opens by itself as soon as Ari has asked.
   const startMic = useCallback(() => {
     const pending = answer.current;
-    if (!pending || !canListen()) return;
-    const mic = browserListenOnce(pending.lang);
-    pending.stopMic = mic.stop;
-    mic.result.then((heard) => {
-      if (answer.current === pending) finish(heard);
+    if (!pending) return;
+    pending.stopMic();
+    setMicProblem(null);
+    setHeard("");
+    const mic = listenForAnswer(pending.lang, {
+      interim: (text) => answer.current === pending && setHeard(text),
+      final: (text) => answer.current === pending && finish(text),
+      problem: (p) => answer.current === pending && setMicProblem(MIC_PROBLEM_TEXT[p]),
     });
+    pending.stopMic = mic.stop;
   }, [finish]);
 
   const listen = useCallback(
     (lang = "en-US") =>
       new Promise<string>((resolve) => {
+        answer.current?.stopMic();
         answer.current = { resolve, stopMic: () => {}, lang };
+        sounds.micOn();
         setListening(true);
         startMic();
       }),
@@ -100,6 +129,8 @@ export function AriProvider({ children, initialState = "bubble" }: React.PropsWi
         face={face}
         faceRef={faceRef}
         listening={listening}
+        heard={heard}
+        micProblem={micProblem}
         onAnswer={finish}
         onRetryMic={startMic}
       />
@@ -136,10 +167,37 @@ function safeSession(op: "get" | "set", value?: string): string | null {
   }
 }
 
+let elevenLabsAvailable = true;
+async function elevenLabsSpeech(text: string, lang: string) {
+  if (!elevenLabsAvailable) return null;
+  try {
+    const res = await fetch("/api/tts", { method: "POST", body: JSON.stringify({ text, lang }) });
+    if (res.status === 503) elevenLabsAvailable = false;
+    if (!res.ok) return null;
+    return (await res.json()) as { audio: string; alignment: Alignment };
+  } catch {
+    return null;
+  }
+}
+
+async function speakWithBrowser(text: string, lang: string, face: FaceHandle | null) {
+  let gotWords = false;
+  // If this voice doesn't report word boundaries, fall back to estimated timings.
+  const fallback = setTimeout(() => {
+    if (!gotWords) face?.mouth(text, 1, lang.slice(0, 2));
+  }, 350);
+  await browserSpeak(text, lang, (word) => {
+    if (!gotWords) face?.stop();
+    gotWords = true;
+    face?.mouthWord(word);
+  });
+  clearTimeout(fallback);
+}
+
 const FRAME: Record<AvatarState, string> = {
   bubble: "h-24 w-24 rounded-full",
-  forward: "h-72 w-72 rounded-3xl shadow-2xl ring-4 ring-indigo-400/60",
-  tutor: "h-64 w-64 rounded-3xl shadow-xl",
+  forward: "h-64 w-64 rounded-3xl",
+  tutor: "h-56 w-56 rounded-3xl",
 };
 
 function AriAvatar({
@@ -149,6 +207,8 @@ function AriAvatar({
   face,
   faceRef,
   listening,
+  heard,
+  micProblem,
   onAnswer,
   onRetryMic,
 }: {
@@ -158,10 +218,11 @@ function AriAvatar({
   face: FaceChoice;
   faceRef: React.RefObject<FaceHandle | null>;
   listening: boolean;
+  heard: string;
+  micProblem: string | null;
   onAnswer: (text: string) => void;
   onRetryMic: () => void;
 }) {
-  const [typed, setTyped] = useState("");
   // TalkingHead sizes its canvas on window resize.
   useEffect(() => {
     const t = setTimeout(() => window.dispatchEvent(new Event("resize")), 320);
@@ -169,41 +230,39 @@ function AriAvatar({
   }, [state]);
 
   return (
-    <div data-ari="avatar" data-state={state} data-face={face} className="pointer-events-none fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+    <div data-ari="avatar" data-state={state} data-face={face} className="pointer-events-none fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
       {state !== "bubble" && caption && (
-        <div className="pointer-events-auto max-w-xs rounded-2xl bg-white px-4 py-3 text-sm shadow-lg dark:bg-zinc-800">
-          <span className="font-semibold text-indigo-600 dark:text-indigo-300">Ari: </span>
-          {caption}
-          {listening && (
-            <form
-              className="mt-2 flex gap-1"
-              onSubmit={(e) => {
-                e.preventDefault();
-                onAnswer(typed);
-                setTyped("");
-              }}
-            >
-              <input
-                data-ari="answer-input"
-                autoFocus
-                className="min-w-0 flex-1 rounded border px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-900"
-                placeholder="Answer out loud, or type…"
-                value={typed}
-                onChange={(e) => setTyped(e.target.value)}
-              />
-              <button type="button" title="Listen again" onClick={onRetryMic} className="rounded border px-2 dark:border-zinc-600">
-                🎤
-              </button>
-              <button data-ari="answer-send" className="rounded bg-indigo-600 px-2 text-white">
-                ↵
-              </button>
-            </form>
-          )}
+        <div className="ari-pop pointer-events-auto w-80 rounded-3xl border border-white/70 bg-white/95 p-4 text-sm shadow-xl shadow-ari-500/10 backdrop-blur">
+          <div className="mb-1 flex items-center gap-2">
+            <span className="grid h-6 w-6 place-items-center rounded-full text-white ari-gradient">
+              <Sparkles className="h-3.5 w-3.5" />
+            </span>
+            <span className="font-semibold text-ari-700">Ari</span>
+            {speaking && <SpeakingDots />}
+          </div>
+          <p className="leading-relaxed text-zinc-700">{caption}</p>
+          <VoicePanel listening={listening} heard={heard} problem={micProblem} onAnswer={onAnswer} onRetry={onRetryMic} />
         </div>
       )}
-      <div className={`pointer-events-auto overflow-hidden bg-indigo-50 transition-all duration-300 dark:bg-indigo-950 ${FRAME[state]} ${speaking ? "ring-4 ring-indigo-500" : ""}`}>
-        <TalkingHeadFace ref={faceRef} />
+      <div className="pointer-events-auto relative">
+        <div
+          className={`overflow-hidden bg-gradient-to-b from-ari-100 to-coral-400/30 shadow-2xl shadow-ari-500/25 transition-all duration-300 ${FRAME[state]} ${
+            speaking ? "ring-4 ring-ari-400" : "ring-4 ring-white"
+          }`}
+        >
+          <TalkingHeadFace ref={faceRef} />
+        </div>
       </div>
     </div>
+  );
+}
+
+function SpeakingDots() {
+  return (
+    <span className="flex items-end gap-0.5" aria-label="speaking">
+      {[0, 1, 2].map((i) => (
+        <span key={i} className="h-2 w-1 animate-pulse rounded-full bg-coral-500" style={{ animationDelay: `${i * 150}ms` }} />
+      ))}
+    </span>
   );
 }

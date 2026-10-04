@@ -30,3 +30,34 @@ export function estimateWordTimings(text: string, rate = 1) {
   }
   return { words, wtimes, wdurations, totalMs: t };
 }
+
+export type Alignment = {
+  characters: string[];
+  character_start_times_seconds: number[];
+  character_end_times_seconds: number[];
+};
+
+// ElevenLabs returns when each character is spoken; the face needs words.
+export function wordsFromAlignment(a: Alignment) {
+  const words: string[] = [];
+  const wtimes: number[] = [];
+  const wdurations: number[] = [];
+  let word = "";
+  let start = 0;
+  let end = 0;
+  const flush = () => {
+    if (!word) return;
+    words.push(word);
+    wtimes.push(Math.round(start * 1000));
+    wdurations.push(Math.round((end - start) * 1000));
+    word = "";
+  };
+  a.characters.forEach((ch, i) => {
+    if (/\s/.test(ch)) return flush();
+    if (!word) start = a.character_start_times_seconds[i];
+    word += ch;
+    end = a.character_end_times_seconds[i];
+  });
+  flush();
+  return { words, wtimes, wdurations };
+}

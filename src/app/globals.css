@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
+/* Ari is a light, colourful product: dark: utilities only apply with an explicit .dark class. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7f5ff;
+  --foreground: #1d1a2f;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -10,17 +14,88 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Ari's brand: violet into coral */
+  --color-ari-50: #f4f1ff;
+  --color-ari-100: #e9e3ff;
+  --color-ari-200: #d4c9ff;
+  --color-ari-400: #9b85ff;
+  --color-ari-500: #7c5cff;
+  --color-ari-600: #6a45f5;
+  --color-ari-700: #5532d6;
+  --color-coral-400: #ff8a6b;
+  --color-coral-500: #ff6f4f;
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(1200px 600px at 100% -10%, #ffe9e1 0%, transparent 60%),
+    radial-gradient(900px 500px at -10% 0%, #e8e2ff 0%, transparent 55%),
+    var(--background);
+  background-attachment: fixed;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.ari-gradient {
+  background-image: linear-gradient(135deg, var(--color-ari-500), var(--color-coral-500));
+}
+
+.ari-gradient-text {
+  background-image: linear-gradient(135deg, var(--color-ari-600), var(--color-coral-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@keyframes ari-ring {
+  0% { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+.ari-ring { animation: ari-ring 1.6s ease-out infinite; }
+.ari-ring-delay { animation-delay: 0.8s; }
+
+@keyframes ari-pop {
+  from { transform: translateY(-8px) scale(0.98); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.ari-pop { animation: ari-pop 0.25s ease-out; }
+
+/* driver.js highlight popover in Ari's colours */
+.driver-popover.ari-highlight { border-radius: 14px; border: 1px solid var(--color-ari-200); box-shadow: 0 12px 32px rgb(76 50 214 / 0.18); }
+.driver-popover.ari-highlight .driver-popover-title { color: var(--color-ari-700); font-weight: 700; }
+
+/* The element the guide wants you to use next */
+@keyframes ari-target {
+  0%, 100% { box-shadow: 0 0 0 3px rgb(124 92 255 / 0.9), 0 0 0 8px rgb(124 92 255 / 0.25); }
+  50% { box-shadow: 0 0 0 3px rgb(255 111 79 / 0.9), 0 0 0 12px rgb(255 111 79 / 0.15); }
+}
+.ari-target { animation: ari-target 1.4s ease-in-out infinite; border-radius: 12px; position: relative; z-index: 1; }
+
+/* Motion */
+@keyframes ari-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.ari-rise { animation: ari-rise 0.4s cubic-bezier(.2,.8,.2,1) both; }
+.ari-stagger > * { animation: ari-rise 0.4s cubic-bezier(.2,.8,.2,1) both; }
+.ari-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.ari-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.ari-stagger > *:nth-child(4) { animation-delay: 180ms; }
+.ari-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.ari-stagger > *:nth-child(6) { animation-delay: 300ms; }
+.ari-stagger > *:nth-child(7) { animation-delay: 360ms; }
+
+@keyframes ari-new-card { 0% { box-shadow: 0 0 0 0 rgb(124 92 255 / .5); } 100% { box-shadow: 0 0 0 14px rgb(124 92 255 / 0); } }
+.ari-new-card { animation: ari-rise .45s cubic-bezier(.2,.8,.2,1) both, ari-new-card 1.2s ease-out .2s 1; }
+
+@keyframes ari-gradient-shift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+.ari-gradient-animated {
+  background-image: linear-gradient(120deg, var(--color-ari-500), var(--color-coral-500), var(--color-ari-400), var(--color-ari-600));
+  background-size: 300% 300%;
+  animation: ari-gradient-shift 8s ease infinite;
+}
+
+.ari-lift { transition: transform .18s ease, box-shadow .18s ease; }
+.ari-lift:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgb(76 50 214 / .12); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ari-rise, .ari-stagger > *, .ari-new-card, .ari-pop, .ari-ring, .ari-target, .ari-gradient-animated { animation: none !important; }
 }

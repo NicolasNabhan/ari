@@ -9,6 +9,7 @@ import type { CoreEffect, CoreInput, DecisionCard, JudgeCall, JudgeResult, Lang,
 import type { EventBus, WorkspaceEvent } from "@/lib/workspace/events";
 import { highlight, clearHighlight } from "./highlight";
 import { driveCursor } from "./ghostCursor";
+import { sounds } from "@/lib/ari/sounds";
 import type { Profile } from "@/lib/workspace/profile";
 
 // Claude when the server has a key; the rule Judge otherwise (or on any error).
@@ -83,9 +84,12 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
       }
     }
 
+    let shownCards = 0;
     function handle(effect: CoreEffect) {
       switch (effect.kind) {
         case "upsert_card":
+          if (state.current.cardOrder.length > shownCards) sounds.card();
+          shownCards = state.current.cardOrder.length;
           setCards(state.current.cardOrder.map((id) => state.current.cards[id]));
           if (endedRef.current) saveLessons(); // a late answer from the Judge after the session ended
           break;
@@ -96,6 +100,7 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
           ariRef.current.setState(effect.state);
           break;
         case "task_set":
+          sounds.success();
           setTask(effect.task);
           break;
         case "teach_explain":
@@ -104,6 +109,7 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
           ariRef.current.say(effect.text, effect.lang ?? langRef.current);
           break;
         case "warn_guardrail":
+          sounds.warning();
           clearHighlight();
           ariRef.current.setState("forward");
           ariRef.current.say(effect.text, langRef.current).then(() => ariRef.current.setState("tutor"));
@@ -126,6 +132,7 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
           setReviewList(null);
           setEnded(true);
           endedRef.current = true;
+          sounds.success();
           saveLessons();
           ariRef.current.say("Thanks, that's everything. I'll remember it for the next person.");
           break;
@@ -133,6 +140,7 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
         case "end_review_item":
         case "ask":
           setQuestionWaiting(false);
+          sounds.question();
           (async () => {
             await ariRef.current.say(effect.text);
             const heard = await ariRef.current.listen();

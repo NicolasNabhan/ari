@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Mail, MessageSquare, MessagesSquare, Phone, PhoneOff, SendHorizontal } from "lucide-react";
 import { northwind } from "@/lib/northwind/seed";
+import { PageTitle, PersonAvatar } from "./PageTitle";
 
 export type SentMessage = { channel: "chat" | "email"; to: string; text: string };
 
@@ -59,53 +61,87 @@ export function Messages({
   const onCall = callWith === to;
   const thread = sent.filter((m) => m.to === to);
   return (
-    <section className="flex gap-4">
-      <ul className="w-56 shrink-0 space-y-1">
-        {northwind.people.map((p) => (
-          <li key={p.id}>
-            <button data-ari={`person-${p.id}`} onClick={() => setTo(p.id)} className={`w-full rounded-lg px-3 py-2 text-left text-sm ${p.id === to ? "bg-indigo-50 dark:bg-indigo-950" : "hover:bg-zinc-100 dark:hover:bg-zinc-800"}`}>
-              <div className="font-medium">{p.name}</div>
-              <div className="text-xs text-zinc-500">{p.role}</div>
-            </button>
-          </li>
-        ))}
-      </ul>
-      <div className="min-w-0 flex-1 rounded-xl border bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="flex items-center justify-between">
-          <h1 className="font-semibold">{person.name}</h1>
-          <div className="flex gap-2 text-sm">
-            {(["chat", "email"] as const).map((c) => (
-              <button key={c} data-ari={`channel-${c}`} onClick={() => setChannel(c)} className={`rounded px-2 py-1 ${channel === c ? "bg-zinc-200 dark:bg-zinc-700" : ""}`}>
-                {c === "chat" ? "Chat" : "Email"}
+    <section>
+      <PageTitle icon={MessagesSquare} title="Chat & email" subtitle="Talk to colleagues and suppliers" tone="sky" />
+      <div className="flex gap-4">
+        <ul className="ari-stagger w-60 shrink-0 space-y-1">
+          {northwind.people.map((p) => (
+            <li key={p.id}>
+              <button
+                data-ari={`person-${p.id}`}
+                onClick={() => setTo(p.id)}
+                className={`flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm transition-all ${
+                  p.id === to ? "bg-white shadow-sm ring-1 ring-ari-100" : "hover:bg-white/70"
+                }`}
+              >
+                <PersonAvatar name={p.name} />
+                <span className="min-w-0">
+                  <span className="block font-semibold text-zinc-900">{p.name}</span>
+                  <span className="block truncate text-xs text-zinc-500">{p.role}</span>
+                </span>
               </button>
-            ))}
-            <button data-ari="call-toggle" onClick={() => onToggleCall(to)} className={`rounded px-2 py-1 font-medium ${onCall ? "bg-red-600 text-white" : "border dark:border-zinc-700"}`}>
-              {onCall ? "End call" : "Call"}
-            </button>
-          </div>
-        </div>
-        {onCall && <p className="mt-2 text-sm text-red-600">On a call with {person.name}…</p>}
-        <ul className="mt-4 space-y-2 text-sm">
-          {thread.length === 0 && <li className="text-zinc-400">No messages yet.</li>}
-          {thread.map((m, i) => (
-            <li key={i} className="ml-auto max-w-[80%] rounded-lg bg-indigo-600 px-3 py-2 text-white">
-              <span className="text-xs opacity-70">{m.channel}</span>
-              <div>{m.text}</div>
             </li>
           ))}
         </ul>
-        <div className="mt-4 flex gap-2">
-          <input
-            data-ari="message-input"
-            className="flex-1 rounded-lg border px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-            placeholder={channel === "chat" ? `Message ${person.name}` : `Email ${person.name}`}
-            value={text}
-            onChange={(e) => type(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && send()}
-          />
-          <button data-ari="message-send" onClick={send} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white">
-            Send
-          </button>
+        <div className="flex min-h-[420px] min-w-0 flex-1 flex-col rounded-3xl border border-zinc-200/70 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-2 border-b border-zinc-100 pb-3">
+            <div className="flex items-center gap-3">
+              <PersonAvatar name={person.name} />
+              <div>
+                <h2 className="font-semibold text-zinc-900">{person.name}</h2>
+                <p className="text-xs text-zinc-500">{person.role}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 rounded-full bg-zinc-100 p-1 text-sm">
+              {(["chat", "email"] as const).map((c) => (
+                <button
+                  key={c}
+                  data-ari={`channel-${c}`}
+                  onClick={() => setChannel(c)}
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1 font-medium transition-all ${channel === c ? "bg-white text-ari-700 shadow-sm" : "text-zinc-500"}`}
+                >
+                  {c === "chat" ? <MessageSquare className="h-3.5 w-3.5" /> : <Mail className="h-3.5 w-3.5" />}
+                  {c === "chat" ? "Chat" : "Email"}
+                </button>
+              ))}
+            </div>
+            <button
+              data-ari="call-toggle"
+              onClick={() => onToggleCall(to)}
+              className={`ari-lift flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold ${onCall ? "bg-rose-500 text-white" : "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"}`}
+            >
+              {onCall ? <PhoneOff className="h-4 w-4" /> : <Phone className="h-4 w-4" />} {onCall ? "End call" : "Call"}
+            </button>
+          </div>
+          {onCall && (
+            <p className="ari-rise mt-3 flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">
+              <span className="h-2 w-2 animate-ping rounded-full bg-rose-500" /> On a call with {person.name}…
+            </p>
+          )}
+          <ul className="mt-4 flex-1 space-y-2 text-sm">
+            {thread.length === 0 && <li className="mt-10 text-center text-zinc-400">No messages yet. Say hello.</li>}
+            {thread.map((m, i) => (
+              <li key={i} className="ari-rise ml-auto max-w-[80%] rounded-2xl rounded-br-md px-3.5 py-2 text-white shadow-md shadow-ari-500/20 ari-gradient">
+                <span className="flex items-center gap-1 text-[11px] uppercase tracking-wider opacity-80">
+                  {m.channel === "chat" ? <MessageSquare className="h-3 w-3" /> : <Mail className="h-3 w-3" />} {m.channel}
+                </span>
+                <div>{m.text}</div>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-4 flex gap-2">
+            <input
+              data-ari="message-input"
+              className="flex-1 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm outline-none focus:border-ari-400 focus:bg-white focus:ring-2 focus:ring-ari-100"
+              placeholder={channel === "chat" ? `Message ${person.name}` : `Email ${person.name}`}
+              value={text}
+              onChange={(e) => type(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && send()}
+            />
+            <button data-ari="message-send" onClick={send} title="Send" className="ari-lift grid w-12 place-items-center rounded-2xl text-white shadow-md shadow-ari-500/30 ari-gradient">
+              <SendHorizontal className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
     </section>

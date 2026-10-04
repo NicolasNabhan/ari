@@ -29,7 +29,8 @@ One Next.js app, deployed on Vercel.
 
 - **Apprentice Core** (`src/lib/apprentice/core.ts`): everything Ari does, as a pure reducer `(state, input) → (state, effects)`. Workspace events and speech go in; cards, questions, explanations, cursor moves and warnings come out. All judgment goes through a **Judge** interface.
 - **Judge**: Claude (`claude-opus-5-5`, structured outputs) via `/api/judge` when `ANTHROPIC_API_KEY` is set; otherwise a built-in rule Judge that reasons like someone who only knows the written procedure.
-- **Voice**: ElevenLabs Agents (`/voice-check`, token route, agent setup script). Until ElevenLabs credits are connected, Ari uses the browser's own speech synthesis and recognition.
+- **Voice**: every line Ari says goes through `/api/tts` (ElevenLabs text-to-speech with timestamps): the face plays the real audio and lip-syncs to the exact word timings. Put a real `ELEVENLABS_API_KEY` in the environment and it switches on automatically. Without it, Ari uses the browser's own voice and moves the mouth word by word as each word is spoken. Listening uses the browser's speech recognition: the microphone opens automatically when Ari asks, with a live voice waveform and a typed fallback.
+- **Sound**: clean interface sounds synthesized with the Web Audio API (no audio files).
 - **Face**: the live HeyGen LiveAvatar is planned via its ElevenLabs integration; today Ari uses the in-browser TalkingHead fallback, with a 5-minute per-visit cap and a demo-key switch already in place (`/avatar-check`).
 - **Teaching aids**: driver.js highlights, Ari's own animated cursor, rrweb session recording.
 - **Demo content**: a made-up company, Northwind Supply (`src/lib/northwind/seed.ts`). Maria's preloaded session (`src/lib/apprentice/mariaRecorded.json`) was captured from a real guided run.

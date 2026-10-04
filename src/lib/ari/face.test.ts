@@ -31,3 +31,19 @@ describe("estimateWordTimings", () => {
     expect(t.totalMs).toBeGreaterThan(1000);
   });
 });
+
+import { wordsFromAlignment } from "./face";
+
+describe("wordsFromAlignment", () => {
+  it("turns ElevenLabs character timings into word timings in milliseconds", () => {
+    const text = "Why B?";
+    const t = [0, 0.05, 0.1, 0.15, 0.2, 0.3];
+    const alignment = { characters: [...text], character_start_times_seconds: t, character_end_times_seconds: t.map((x) => x + 0.05) };
+    expect(wordsFromAlignment(alignment)).toEqual({ words: ["Why", "B?"], wtimes: [0, 200], wdurations: [150, 150] });
+  });
+
+  it("ignores repeated spaces", () => {
+    const alignment = { characters: [..."a  b"], character_start_times_seconds: [0, 0.1, 0.2, 0.3], character_end_times_seconds: [0.1, 0.2, 0.3, 0.4] };
+    expect(wordsFromAlignment(alignment).words).toEqual(["a", "b"]);
+  });
+});
