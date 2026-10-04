@@ -20,7 +20,6 @@ Feature freeze is **6:00 AM**. After that: only bug fixes, videos and submitting
 - [ ] Optional: `ANTHROPIC_API_KEY=…` for Claude. Without it, Ari uses its built-in rules and the demo still works. (you)
 - [ ] Merge the three features as they finish: eye tracking, week and schedule, files and meetings (me)
 - [ ] Run the whole demo in Chrome once: start page → step 1 → step 2. Fix what breaks. (me)
-- [ ] Test the ElevenLabs voice and transcription with the real key (me)
 - [ ] Update the README: what Ari is, how to try it, how it's built, and licences. TalkingHead avatar is CC BY-NC; WebGazer is GPLv3. (me)
 - [ ] Push to GitHub (me, once you say go)
 
