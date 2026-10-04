@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
 import { STAGE } from "@/lib/story/stage";
 
 // A transparent 3D layer over the website where Maria lives.
@@ -32,6 +33,62 @@ function aimBone(b: THREE.Bone, child: THREE.Object3D, worldDir: THREE.Vector3) 
   b.quaternion.copy(parentWorld.invert().multiply(worldTarget));
   b.updateWorldMatrix(false, true);
 }
+
+// Back to the rig's rest (T) pose.
+function resetPose(bones: Bones) {
+  for (const b of new Set(Object.values(bones))) if (b.userData.restQ) b.quaternion.copy(b.userData.restQ);
+}
+
+// Retarget a Mixamo clip onto Maria. Her bones share Mixamo's names but are
+// oriented differently at rest, so each rotation is moved into world space
+// using the source rest pose, then back into her bones' space using her rest
+// pose. Hip translation is dropped (clips are "in place"; we move her).
+function worldRestOf(root: THREE.Object3D) {
+  const rest = new Map<string, { world: THREE.Quaternion; parentWorld: THREE.Quaternion }>();
+  root.updateWorldMatrix(true, true);
+  root.traverse((o) => {
+    if (!(o as THREE.Bone).isBone) return;
+    const world = new THREE.Quaternion();
+    const parentWorld = new THREE.Quaternion();
+    o.getWorldQuaternion(world);
+    o.parent?.getWorldQuaternion(parentWorld);
+    rest.set(THREE.PropertyBinding.sanitizeNodeName(o.name), { world, parentWorld });
+  });
+  return rest;
+}
+
+function retarget(clip: THREE.AnimationClip, source: THREE.Object3D, targetRest: ReturnType<typeof worldRestOf>) {
+  const sourceRest = worldRestOf(source);
+  const q = new THREE.Quaternion();
+  clip.tracks = clip.tracks.filter((t) => t.name.endsWith(".quaternion"));
+  for (const track of clip.tracks) {
+    const boneName = track.name.slice(0, -".quaternion".length);
+    const src = sourceRest.get(boneName);
+    const dst = targetRest.get(boneName);
+    if (!src || !dst) continue;
+    const srcRestInv = src.world.clone().invert();
+    const dstParentInv = dst.parentWorld.clone().invert();
+    const v = track.values;
+    for (let i = 0; i < v.length; i += 4) {
+      q.fromArray(v, i);
+      // Rotation relative to rest, in world space…
+      q.premultiply(src.parentWorld).multiply(srcRestInv);
+      // …applied to Maria's rest pose, in her bone's local space.
+      q.premultiply(dstParentInv).multiply(dst.world);
+      q.toArray(v, i);
+    }
+  }
+  return clip;
+}
+
+type Waypoint = { x: number; z: number; pause: number };
+// A loop that shows depth: away from the viewer (smaller), across, and back (bigger).
+const ROUTE: Waypoint[] = [
+  { x: -0.55, z: -1.6, pause: 0.6 },
+  { x: -1.15, z: -0.9, pause: 0.4 },
+  { x: -0.85, z: 0, pause: 2.5 },
+];
+const WALK_SPEED = 0.55; // units per second
 
 // From the T-pose to a relaxed standing pose.
 function relax(bones: Bones) {
@@ -68,12 +125,18 @@ export function MariaStage() {
     rim.position.set(2, 2, -2);
     scene.add(rim);
 
-    // Camera looks at the "floor" in front of the website; 1 unit ≈ Maria's height.
+    // Framing: the bottom edge of the screen cuts at her knees when she's at
+    // the front; walking away (negative z) makes her smaller. 1 unit ≈ her height.
     const camera = new THREE.PerspectiveCamera(22, STAGE.width / STAGE.height, 0.1, 50);
-    camera.position.set(0, 0.6, 3.1);
-    camera.lookAt(0, 0.55, 0);
+    camera.position.set(0, 0.97, 3.6);
+    camera.lookAt(0, 0.97, 0);
 
     let maria: THREE.Object3D | null = null;
+    let mixer: THREE.AnimationMixer | null = null;
+    let walk: THREE.AnimationAction | null = null;
+    // Route state: walking toward ROUTE[leg], or pausing there.
+    let leg = 0;
+    let pausing = 1.5;
     const bones: Bones = {};
     new GLTFLoader().load(
       "/avatars/maria.glb",
@@ -83,14 +146,30 @@ export function MariaStage() {
           if ((o as THREE.Bone).isBone) {
             const b = o as THREE.Bone;
             b.userData.rest = b.rotation.clone();
+            b.userData.restQ = b.quaternion.clone();
             bones[b.name.replace(":", "")] = b;
             bones[b.name] = b;
           }
           if ((o as THREE.Mesh).isMesh) o.frustumCulled = false;
         });
+        const mariaRest = worldRestOf(maria);
         relax(bones);
-        maria.position.set(-0.62, -0.06, 0);
+        maria.position.set(-0.85, 0, 0);
         scene.add(maria);
+        mixer = new THREE.AnimationMixer(maria);
+        const m = mixer;
+        new FBXLoader().load(
+          "/avatars/anims/walk.fbx",
+          (fbx) => {
+            try {
+              walk = m.clipAction(retarget(fbx.animations[0], fbx, mariaRest));
+            } catch (e) {
+              console.error("[Maria] walk retarget failed", e);
+            }
+          },
+          undefined,
+          (e) => console.error("[Maria] walk load failed", e),
+        );
         (window as unknown as { ariMaria: unknown }).ariMaria = { maria, bones, camera, scene };
         setStatus("ready");
       },
@@ -101,8 +180,43 @@ export function MariaStage() {
     const clock = new THREE.Clock();
     let frame = 0;
     const tick = () => {
-      const t = clock.getElapsedTime();
-      if (maria) {
+      const dt = Math.min(clock.getDelta(), 0.05);
+      const t = clock.elapsedTime;
+      if (maria && walk) {
+        if (pausing > 0) {
+          pausing -= dt;
+          // Turn to face the viewer while standing.
+          maria.rotation.y += (0 - maria.rotation.y) * Math.min(1, dt * 4);
+          if (pausing <= 0) {
+            resetPose(bones);
+            walk.reset().fadeIn(0.25).play();
+          }
+        } else {
+          const target = ROUTE[leg];
+          const dx = target.x - maria.position.x;
+          const dz = target.z - maria.position.z;
+          const dist = Math.hypot(dx, dz);
+          const facing = Math.atan2(dx, dz);
+          let turn = facing - maria.rotation.y;
+          turn = Math.atan2(Math.sin(turn), Math.cos(turn));
+          maria.rotation.y += turn * Math.min(1, dt * 6);
+          const step = Math.min(dist, WALK_SPEED * dt);
+          maria.position.x += (dx / (dist || 1)) * step;
+          maria.position.z += (dz / (dist || 1)) * step;
+          if (dist < 0.01) {
+            walk.fadeOut(0.25);
+            pausing = target.pause;
+            leg = (leg + 1) % ROUTE.length;
+            setTimeout(() => {
+              walk?.stop();
+              resetPose(bones);
+              relax(bones);
+            }, 260);
+          }
+        }
+        mixer?.update(dt);
+      }
+      if (maria && pausing > 0) {
         // Gentle idle: breathing and a small sway, so she never looks frozen.
         const spine = bone(bones, "Spine1");
         const head = bone(bones, "Head");
@@ -111,7 +225,6 @@ export function MariaStage() {
           head.rotation.y = head.userData.rest.y + Math.sin(t * 0.5) * 0.08;
           head.rotation.x = head.userData.rest.x + Math.sin(t * 0.7) * 0.03;
         }
-        maria.rotation.y = Math.sin(t * 0.3) * 0.05;
       }
       renderer.render(scene, camera);
       frame = requestAnimationFrame(tick);
