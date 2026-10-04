@@ -13,6 +13,17 @@ const VOICE_SETTINGS: Record<string, object | undefined> = {
   maria: { stability: 0.6, similarity_boost: 0.75, speed: 0.88 },
 };
 
+// Open /api/tts in a browser to check the voice setup (never shows the key itself).
+export function GET() {
+  const key = process.env.ELEVENLABS_API_KEY;
+  const configured = !!key && key !== "your_key_here";
+  return Response.json({
+    elevenLabsKey: configured ? "set" : "missing",
+    voices: { ari: process.env.ELEVENLABS_VOICE_ARI || DEFAULT_VOICES.ari, maria: process.env.ELEVENLABS_VOICE_MARIA || DEFAULT_VOICES.maria },
+    hint: configured ? "The key is set. If voices still sound robotic, open the browser console for /api/tts errors." : "Add ELEVENLABS_API_KEY in Vercel → Settings → Environment Variables, then redeploy.",
+  });
+}
+
 export async function POST(request: Request) {
   const apiKey = process.env.ELEVENLABS_API_KEY;
   if (!apiKey || apiKey === "your_key_here") return Response.json({ error: "ElevenLabs voice not configured" }, { status: 503 });
