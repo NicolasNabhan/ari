@@ -32,7 +32,7 @@ export function WalkthroughPresenter({
   useEffect(() => {
     ariRef.current = ari;
   }, [ari]);
-  const maria = useRef(voiceOnly());
+  const maria = useRef(voiceOnly(0.6)); // her voice comes out louder than Ari's
   const bubble = view.bubble;
 
   // Speak the line at this position, cutting off whatever was still playing.
@@ -45,18 +45,23 @@ export function WalkthroughPresenter({
   useEffect(() => {
     const { bubble, kind } = line.current;
     maria.current.stop();
+    if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
     if (!bubble) {
       ariRef.current.setState("bubble");
       return;
     }
-    if (bubble.speaker === "ari") {
-      if (kind === "ari-asks") sounds.question();
-      ariRef.current.setState("forward");
-      void ariRef.current.say(bubble.text);
-    } else {
-      ariRef.current.setState("bubble");
-      void speak(maria.current, bubble.text, { speaker: "maria" });
-    }
+    // A short, natural pause after each button press before anyone speaks.
+    const start = setTimeout(() => {
+      if (bubble.speaker === "ari") {
+        if (kind === "ari-asks") sounds.question();
+        ariRef.current.setState("forward");
+        void ariRef.current.say(bubble.text);
+      } else {
+        ariRef.current.setState("bubble");
+        void speak(maria.current, bubble.text, { speaker: "maria" });
+      }
+    }, 500);
+    return () => clearTimeout(start);
   }, [view.position]);
 
   // Maria's clicks: her cursor glides to each target, the strip around it
