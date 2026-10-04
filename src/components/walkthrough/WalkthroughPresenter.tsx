@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { useAri } from "@/components/ari/AriProvider";
 import { speak, voiceOnly } from "@/lib/ari/speech";
+import { Handover } from "./Handover";
 import { sounds } from "@/lib/ari/sounds";
 import { SCRIPT } from "@/lib/walkthrough/script";
 import { flatten, type NavAction, type WalkthroughView } from "@/lib/walkthrough/replay";
@@ -123,6 +124,7 @@ export function WalkthroughPresenter({
 
   return (
     <>
+      {view.beat.kind === "handover" && <Handover cards={view.cards} />}
       {spot && (
         <div
           aria-hidden

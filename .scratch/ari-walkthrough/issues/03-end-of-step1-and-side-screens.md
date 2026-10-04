@@ -9,10 +9,10 @@
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] The review beat: Ari reads its least-certain guess and Maria confirms it
-- [ ] The "What Ari learned" summary shows each card's level and the unwritten rules
-- [ ] The "Maria has left the office" transition goes to step 2
-- [ ] "New" dots on Week & schedule and Files & meetings, plus Ari's line about them
-- [ ] Opening either one in step 1 doesn't move the walkthrough, and closing it returns to the same position
+- [x] The review beat: Ari reads its least-certain guess and Maria confirms it
+- [x] The "What Ari learned" summary shows each card's level and the unwritten rules
+- [x] The "Maria has left the office" transition goes to step 2
+- [x] "New" dots on Week & schedule and Files & meetings, plus Ari's line about them
+- [x] Opening either one in step 1 doesn't move the walkthrough, and closing it returns to the same position

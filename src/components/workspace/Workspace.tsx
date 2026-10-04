@@ -32,6 +32,7 @@ import {
   Stamp,
   Store,
   Calculator,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { ProfileForm } from "./ProfileForm";
@@ -104,6 +105,7 @@ function WorkspaceShell({ audience, lessons, guided, walkthrough }: { audience: 
   // Step 1: Maria's session plays from a script; the workspace shows whatever
   // the script has reached, and Ari's cards come from replaying it.
   const [position, setPosition] = useState(0);
+  const [sidePanel, setSidePanel] = useState<"week" | "context" | null>(null);
   // Moving forward one beat, Maria's clicks land one at a time (the presenter
   // animates them); any other move shows the beat already done.
   const [clicksShown, setClicksShown] = useState(Infinity);
@@ -146,6 +148,11 @@ function WorkspaceShell({ audience, lessons, guided, walkthrough }: { audience: 
   const currentRequest = () => requests.find((r) => r.id === openRequestId) ?? null;
 
   function go(next: Screen) {
+    // Step 1: the big-picture screens open as a panel; Maria's walkthrough stays where it is.
+    if (wt) {
+      if (next === "week" || next === "context") setSidePanel(next);
+      return;
+    }
     setScreen(next);
     bus.emit({ type: "screen_opened", screen: next });
   }
@@ -294,6 +301,11 @@ function WorkspaceShell({ audience, lessons, guided, walkthrough }: { audience: 
                     <Icon className="h-4 w-4" />
                   </span>
                   <span className="hidden xl:inline">{label}</span>
+                  {wt && (s === "week" || s === "context") && (
+                    <span className="ml-auto rounded-full bg-coral-500 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-white xl:inline" title="New: Ari learns from these too">
+                      New
+                    </span>
+                  )}
                 </button>
               </li>
             ))}
@@ -391,7 +403,25 @@ function WorkspaceShell({ audience, lessons, guided, walkthrough }: { audience: 
         </aside>
       </div>
       {!started && <IntroOverlay mode={teaching ? "newcomer" : walkthrough ? "walkthrough" : "expert"} onStart={() => setStarted(true)} />}
-      {wt && started && <WalkthroughPresenter view={wt} onNavigate={walk} onClicksShown={setClicksShown} />}
+      {sidePanel && (
+        <div className="fixed inset-0 z-[46] flex justify-center bg-[#1d1a2f]/40 p-6 pb-24 backdrop-blur-sm" onClick={() => setSidePanel(null)}>
+          <section
+            data-ari="side-panel"
+            onClick={(e) => e.stopPropagation()}
+            className="ari-pop relative w-full max-w-5xl overflow-y-auto rounded-3xl bg-[#f7f5ff] p-6 shadow-2xl"
+          >
+            <button
+              data-ari="close-side-panel"
+              onClick={() => setSidePanel(null)}
+              className="sticky top-0 float-right z-10 flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 shadow ring-1 ring-zinc-200"
+            >
+              <X className="h-4 w-4" /> Back to Maria
+            </button>
+            {sidePanel === "week" ? <WeekView audience="expert" /> : <ContextHub audience="expert" />}
+          </section>
+        </div>
+      )}
+      {wt && started && !sidePanel && <WalkthroughPresenter view={wt} onNavigate={walk} onClicksShown={setClicksShown} />}
       {guided && !teaching && started && <CoachBar task={task} cards={cards} ended={review.ended} screen={screen} />}
       {teaching && started && <TipsBar lang={lang} />}
       {review.list && (
