@@ -1,10 +1,10 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import type { FaceHandle } from "./TalkingHeadFace";
 
 // Ari: a little glossy white robot with a dark visor and glowing eyes. It
-// hovers, blinks, sometimes smiles with its eyes, waves now and then, and a
+// hovers, blinks, waves now and then (smiling with its eyes as it does), and a
 // light bar on its visor flickers while it talks. No frame: it floats on the
 // page as a cut-out. Its voice plays through Web Audio so it can be boosted.
 
@@ -17,7 +17,6 @@ export const RobotAri = forwardRef<FaceHandle, { size: number; speaking: boolean
   const ctx = useRef<AudioContext | null>(null);
   const source = useRef<AudioBufferSourceNode | null>(null);
   const generation = useRef(0); // bumps on stop(), so a line still loading never starts late
-  const [happy, setHappy] = useState(false);
   const [pulse, setPulse] = useState(0); // bumps on each spoken word (browser voice)
 
   useImperativeHandle(ref, () => ({
@@ -55,97 +54,65 @@ export const RobotAri = forwardRef<FaceHandle, { size: number; speaking: boolean
     },
   }));
 
-  // Every so often, happy eyes for a moment.
-  useEffect(() => {
-    let off: ReturnType<typeof setTimeout>;
-    const t = setInterval(() => {
-      setHappy(true);
-      off = setTimeout(() => setHappy(false), 1800);
-    }, 7000);
-    return () => {
-      clearInterval(t);
-      clearTimeout(off);
-    };
-  }, []);
-
-  const eyesHappy = happy && !listening;
   return (
     <div data-ari="ari-robot" className="robot-ari pointer-events-none select-none" style={{ width: size, height: size * 1.2 }} data-speaking={speaking} data-listening={listening}>
       <div className="robot-hover h-full w-full">
         <svg viewBox="0 0 200 240" className="h-full w-full overflow-visible" aria-label="Ari">
-          <defs>
-            <radialGradient id="ra-white" cx="38%" cy="28%" r="80%">
-              <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="60%" stopColor="#eef0f6" />
-              <stop offset="100%" stopColor="#c9cedb" />
-            </radialGradient>
-            <linearGradient id="ra-visor" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#1c2233" />
-              <stop offset="100%" stopColor="#05070c" />
-            </linearGradient>
-            <linearGradient id="ra-joint" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#3a3f4d" />
-              <stop offset="100%" stopColor="#0b0d12" />
-            </linearGradient>
-            <filter id="ra-glow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2.4" result="b" />
-              <feMerge>
-                <feMergeNode in="b" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
+          <RobotDefs />
 
-          {/* arms: hang at the sides, attached at the shoulders; the right one waves now and then */}
-          <g className="robot-arm-left" style={{ transformOrigin: "72px 146px" }}>
-            <g transform="rotate(40 72 146)">
-              <rect x="64" y="142" width="16" height="44" rx="8" fill="url(#ra-white)" stroke="#cfd3df" stroke-width="1.5" />
-              <circle cx="72" cy="188" r="8" fill="url(#ra-joint)" />
+          {/* arms, behind the body so they grow out of it; the right one waves */}
+          <g className="ra-arm-l-up">
+            <rect x="57" y="144" width="14" height="38" rx="7" fill="url(#ra-shell)" stroke="#d3d7e2" strokeWidth="1" />
+            <g className="ra-arm-l-fore">
+              <rect x="58" y="176" width="12" height="30" rx="6" fill="url(#ra-shell)" stroke="#d3d7e2" strokeWidth="1" />
+              <ellipse cx="64" cy="208" rx="8.5" ry="8" fill="url(#ra-dark)" />
             </g>
           </g>
-          <g className="robot-arm-right" style={{ transformOrigin: "128px 146px" }}>
-            <g transform="rotate(-40 128 146)">
-              <rect x="120" y="142" width="16" height="44" rx="8" fill="url(#ra-white)" stroke="#cfd3df" stroke-width="1.5" />
-              <circle cx="128" cy="188" r="8" fill="url(#ra-joint)" />
+          <g className="ra-arm-r-up">
+            <rect x="129" y="144" width="14" height="38" rx="7" fill="url(#ra-shell)" stroke="#d3d7e2" strokeWidth="1" />
+            <g className="ra-arm-r-fore">
+              <rect x="130" y="176" width="12" height="30" rx="6" fill="url(#ra-shell)" stroke="#d3d7e2" strokeWidth="1" />
+              <ellipse cx="136" cy="208" rx="8.5" ry="8" fill="url(#ra-dark)" />
             </g>
           </g>
 
-          {/* body */}
-          <ellipse cx="100" cy="168" rx="40" ry="38" fill="url(#ra-white)" />
-          <path d="M62 178 Q100 196 138 178 L136 188 Q100 206 64 188 Z" fill="url(#ra-joint)" />
-          <circle cx="100" cy="186" r="3.2" fill="#dff8ff" filter="url(#ra-glow)" />
-          <circle cx="72" cy="146" r="7" fill="url(#ra-joint)" />
-          <circle cx="128" cy="146" r="7" fill="url(#ra-joint)" />
+          {/* hover glow */}
+          <ellipse className="ra-thruster" cx="100" cy="224" rx="16" ry="4" fill="#67e8f9" filter="url(#ra-soft)" />
 
-          {/* legs */}
-          <rect x="72" y="198" width="22" height="26" rx="10" fill="url(#ra-white)" />
-          <rect x="106" y="198" width="22" height="26" rx="10" fill="url(#ra-white)" />
-          <rect x="70" y="219" width="26" height="8" rx="4" fill="url(#ra-joint)" />
-          <rect x="104" y="219" width="26" height="8" rx="4" fill="url(#ra-joint)" />
+          {/* body: a smooth bean */}
+          <path d="M100 132 C140 132 147 166 137 191 C129 210 113 216 100 216 C87 216 71 210 63 191 C53 166 60 132 100 132 Z" fill="url(#ra-shell)" />
+          <path d="M100 132 C140 132 147 166 137 191 C129 210 113 216 100 216 C87 216 71 210 63 191 C53 166 60 132 100 132 Z" fill="url(#ra-shade)" />
+          <path d="M70 186 Q100 200 130 186" stroke="#c4c9d6" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          <ellipse cx="84" cy="150" rx="12" ry="7" fill="#fff" opacity="0.7" transform="rotate(-20 84 150)" />
+          <circle cx="100" cy="170" r="3.4" fill="#cffafe" filter="url(#ra-glow)" className="robot-antenna" />
+
+          {/* neck: the head floats just above the body */}
+          <ellipse cx="100" cy="130" rx="22" ry="5" fill="url(#ra-dark)" />
 
           {/* head */}
           <g className="robot-head" style={{ transformOrigin: "100px 128px" }}>
-            <rect x="96" y="2" width="8" height="16" rx="4" fill="url(#ra-joint)" />
-            <circle cx="100" cy="4" r="5" fill="#7dd3fc" filter="url(#ra-glow)" className="robot-antenna" />
-            <ellipse cx="26" cy="72" rx="9" ry="20" fill="url(#ra-joint)" />
-            <ellipse cx="174" cy="72" rx="9" ry="20" fill="url(#ra-joint)" />
-            <rect x="24" y="14" width="152" height="118" rx="58" fill="url(#ra-white)" />
-            <rect x="40" y="36" width="120" height="76" rx="36" fill="url(#ra-visor)" />
-            <path d="M54 46 Q100 34 146 46" stroke="white" strokeOpacity="0.18" strokeWidth="5" fill="none" strokeLinecap="round" />
+            <rect x="97" y="6" width="6" height="16" rx="3" fill="url(#ra-dark)" />
+            <circle cx="100" cy="6" r="5" fill="#7dd3fc" filter="url(#ra-glow)" className="robot-antenna" />
+            <ellipse cx="30" cy="74" rx="7" ry="17" fill="url(#ra-dark)" />
+            <ellipse cx="170" cy="74" rx="7" ry="17" fill="url(#ra-dark)" />
+            <rect x="30" y="18" width="140" height="108" rx="54" fill="url(#ra-shell)" />
+            <rect x="30" y="18" width="140" height="108" rx="54" fill="url(#ra-shade)" />
+            <ellipse cx="66" cy="34" rx="22" ry="8" fill="#fff" opacity="0.8" transform="rotate(-14 66 34)" />
+            <rect x="44" y="42" width="112" height="62" rx="31" fill="url(#ra-visor)" />
+            <path d="M58 52 Q100 42 142 52" stroke="#fff" strokeOpacity="0.16" strokeWidth="4" fill="none" strokeLinecap="round" />
 
-            {/* eyes */}
+            {/* eyes: open (blinking) most of the time, happy while waving */}
             <g filter="url(#ra-glow)" className={`robot-eyes ${listening ? "robot-eyes-up" : ""}`}>
-              {eyesHappy ? (
-                <>
-                  <path d="M66 78 Q78 62 90 78" stroke="#a5f3fc" strokeWidth="7" strokeLinecap="round" fill="none" />
-                  <path d="M110 78 Q122 62 134 78" stroke="#a5f3fc" strokeWidth="7" strokeLinecap="round" fill="none" />
-                </>
-              ) : (
+              <g className="ra-eyes-open">
                 <g className="robot-blink" style={{ transformOrigin: "100px 72px" }}>
-                  <rect x="69" y="60" width="18" height="24" rx="9" fill="#a5f3fc" />
-                  <rect x="113" y="60" width="18" height="24" rx="9" fill="#a5f3fc" />
+                  <rect x="69" y="59" width="18" height="26" rx="9" fill="#a5f3fc" />
+                  <rect x="113" y="59" width="18" height="26" rx="9" fill="#a5f3fc" />
                 </g>
-              )}
+              </g>
+              <g className="ra-eyes-happy">
+                <path d="M67 80 Q78 64 89 80" stroke="#a5f3fc" strokeWidth="6.5" strokeLinecap="round" fill="none" />
+                <path d="M111 80 Q122 64 133 80" stroke="#a5f3fc" strokeWidth="6.5" strokeLinecap="round" fill="none" />
+              </g>
             </g>
 
             {/* voice light: flickers while Ari talks */}
@@ -154,13 +121,13 @@ export const RobotAri = forwardRef<FaceHandle, { size: number; speaking: boolean
                 <rect
                   key={`${i}-${pulse % 2}`}
                   x={86 + i * 6}
-                  y={94}
+                  y={92}
                   width="3.5"
-                  height="8"
+                  height="7"
                   rx="1.75"
                   fill="#67e8f9"
                   className="robot-voicebar"
-                  style={{ transformOrigin: `${87.75 + i * 6}px 98px`, animationDelay: `${(i * 97) % 300}ms` }}
+                  style={{ transformOrigin: `${87.75 + i * 6}px 95.5px`, animationDelay: `${(i * 97) % 300}ms` }}
                 />
               ))}
             </g>
@@ -171,3 +138,37 @@ export const RobotAri = forwardRef<FaceHandle, { size: number; speaking: boolean
     </div>
   );
 });
+
+function RobotDefs() {
+  return (
+    <defs>
+      <radialGradient id="ra-shell" cx="35%" cy="25%" r="85%">
+        <stop offset="0%" stopColor="#ffffff" />
+        <stop offset="50%" stopColor="#f3f4f8" />
+        <stop offset="100%" stopColor="#d3d7e1" />
+      </radialGradient>
+      <linearGradient id="ra-shade" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="55%" stopColor="#5a6380" stopOpacity="0" />
+        <stop offset="100%" stopColor="#5a6380" stopOpacity="0.16" />
+      </linearGradient>
+      <linearGradient id="ra-visor" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#222a3d" />
+        <stop offset="100%" stopColor="#04060b" />
+      </linearGradient>
+      <linearGradient id="ra-dark" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#3b4152" />
+        <stop offset="100%" stopColor="#0c0e14" />
+      </linearGradient>
+      <filter id="ra-glow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="2.2" result="b" />
+        <feMerge>
+          <feMergeNode in="b" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+      <filter id="ra-soft" x="-100%" y="-300%" width="300%" height="700%">
+        <feGaussianBlur stdDeviation="4" />
+      </filter>
+    </defs>
+  );
+}
