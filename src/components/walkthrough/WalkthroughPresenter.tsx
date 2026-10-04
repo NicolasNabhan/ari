@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { useAri } from "@/components/ari/AriProvider";
 import { speak, voiceOnly } from "@/lib/ari/speech";
+import type { FaceHandle } from "@/components/ari/TalkingHeadFace";
 import { Handover } from "./Handover";
 import { sounds } from "@/lib/ari/sounds";
 import { SCRIPT } from "@/lib/walkthrough/script";
@@ -22,17 +23,25 @@ export function WalkthroughPresenter({
   view,
   onNavigate,
   onClicksShown,
+  mariaFace,
+  onMariaSpeaking,
 }: {
   view: WalkthroughView;
   onNavigate: (action: NavAction) => void;
   onClicksShown: (n: number) => void;
+  mariaFace: React.RefObject<FaceHandle | null>;
+  onMariaSpeaking: (on: boolean) => void;
 }) {
   const ari = useAri();
   const ariRef = useRef(ari);
   useEffect(() => {
     ariRef.current = ari;
   }, [ari]);
-  const maria = useRef(voiceOnly(0.6)); // her voice comes out louder than Ari's
+  const voice = useRef(voiceOnly(0.6)); // until her face has loaded
+  const speakingRef = useRef(onMariaSpeaking);
+  useEffect(() => {
+    speakingRef.current = onMariaSpeaking;
+  });
   const bubble = view.bubble;
 
   // Speak the line at this position, cutting off whatever was still playing.
@@ -44,7 +53,9 @@ export function WalkthroughPresenter({
   });
   useEffect(() => {
     const { bubble, kind } = line.current;
-    maria.current.stop();
+    voice.current.stop();
+    mariaFace.current?.stop();
+    speakingRef.current(false);
     if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
     if (!bubble) {
       ariRef.current.setState("bubble");
@@ -58,11 +69,18 @@ export function WalkthroughPresenter({
         void ariRef.current.say(bubble.text);
       } else {
         ariRef.current.setState("bubble");
-        void speak(maria.current, bubble.text, { speaker: "maria" });
+        speakingRef.current(true);
+        let current = true;
+        void speak(mariaFace.current?.ready() ? mariaFace.current : voice.current, bubble.text, { speaker: "maria", isCurrent: () => current }).then(() => current && speakingRef.current(false));
+        cleanup = () => (current = false);
       }
     }, 500);
-    return () => clearTimeout(start);
-  }, [view.position]);
+    let cleanup = () => {};
+    return () => {
+      clearTimeout(start);
+      cleanup();
+    };
+  }, [view.position, mariaFace]);
 
   // Maria's clicks: her cursor glides to each target, the strip around it
   // stays bright while the rest dims, she clicks, and the screen updates.
@@ -157,7 +175,7 @@ export function WalkthroughPresenter({
         <span className="mt-4 rounded-full bg-coral-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow">Maria</span>
       </div>
       {bubble?.speaker === "maria" && (
-        <div key={view.position} data-ari="maria-bubble" className="ari-pop fixed bottom-28 left-4 z-50 w-[22rem] max-w-[calc(100vw-2rem)]">
+        <div key={view.position} data-ari="maria-bubble" className="ari-pop fixed bottom-56 left-4 z-50 w-[22rem] max-w-[calc(100vw-2rem)]">
           <div className="relative rounded-3xl rounded-bl-md bg-white p-4 shadow-xl shadow-coral-500/15 ring-1 ring-coral-200">
             <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-coral-500">
               <span className="grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-amber-300 to-coral-500 text-[11px] text-white">M</span>

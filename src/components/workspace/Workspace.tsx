@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { northwind, quoteFor } from "@/lib/northwind/seed";
 import type { ApprovalRoute, Screen } from "@/lib/workspace/events";
@@ -53,6 +53,8 @@ import { ReviewList } from "@/components/apprentice/ReviewList";
 import { ProcedureView } from "@/components/apprentice/ProcedureView";
 import { AriProvider } from "@/components/ari/AriProvider";
 import { WalkthroughPresenter } from "@/components/walkthrough/WalkthroughPresenter";
+import { MariaPortrait } from "@/components/walkthrough/MariaPortrait";
+import type { FaceHandle } from "@/components/ari/TalkingHeadFace";
 import { SCRIPT } from "@/lib/walkthrough/script";
 import { navigate, replayTo, type NavAction } from "@/lib/walkthrough/replay";
 import { useGaze } from "@/components/gaze/useGaze";
@@ -105,6 +107,8 @@ function WorkspaceShell({ audience, lessons, guided, walkthrough }: { audience: 
   // Step 1: Maria's session plays from a script; the workspace shows whatever
   // the script has reached, and Ari's cards come from replaying it.
   const [position, setPosition] = useState(0);
+  const mariaFace = useRef<FaceHandle>(null);
+  const [mariaSpeaking, setMariaSpeaking] = useState(false);
   const [blocked, setBlocked] = useState<string | null>(null); // Ari's warning when it stopped an approval
   const [sidePanel, setSidePanel] = useState<"week" | "context" | null>(null);
   // Moving forward one beat, Maria's clicks land one at a time (the presenter
@@ -425,7 +429,10 @@ function WorkspaceShell({ audience, lessons, guided, walkthrough }: { audience: 
           </section>
         </div>
       )}
-      {wt && started && !sidePanel && <WalkthroughPresenter view={wt} onNavigate={walk} onClicksShown={setClicksShown} />}
+      {wt && started && <MariaPortrait faceRef={mariaFace} speaking={mariaSpeaking} leaving={wt.beat.kind === "handover"} />}
+      {wt && started && !sidePanel && (
+        <WalkthroughPresenter view={wt} onNavigate={walk} onClicksShown={setClicksShown} mariaFace={mariaFace} onMariaSpeaking={setMariaSpeaking} />
+      )}
       {guided && !teaching && started && <CoachBar task={task} cards={cards} ended={review.ended} screen={screen} />}
       {teaching && started && <TipsBar lang={lang} />}
       {review.list && (

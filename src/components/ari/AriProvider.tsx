@@ -7,7 +7,8 @@ import { Sparkles } from "lucide-react";
 import { VoicePanel } from "./VoicePanel";
 import { sounds } from "@/lib/ari/sounds";
 import { chooseFace, type AvatarState, type FaceChoice } from "@/lib/ari/face";
-import { TalkingHeadFace, type FaceHandle } from "./TalkingHeadFace";
+import type { FaceHandle } from "./TalkingHeadFace";
+import { RobotAri } from "./RobotAri";
 
 type Ari = {
   state: AvatarState;
@@ -156,11 +157,8 @@ function safeSession(op: "get" | "set", value?: string): string | null {
   }
 }
 
-const FRAME: Record<AvatarState, string> = {
-  bubble: "h-24 w-24 rounded-full",
-  forward: "h-64 w-64 rounded-3xl",
-  tutor: "h-56 w-56 rounded-3xl",
-};
+// How big Ari the robot is: small while watching, bigger when it speaks up or teaches.
+const SIZE: Record<AvatarState, number> = { bubble: 96, forward: 150, tutor: 136 };
 
 function AriAvatar({
   state,
@@ -185,12 +183,6 @@ function AriAvatar({
   onAnswer: (text: string) => void;
   onRetryMic: () => void;
 }) {
-  // TalkingHead sizes its canvas on window resize.
-  useEffect(() => {
-    const t = setTimeout(() => window.dispatchEvent(new Event("resize")), 320);
-    return () => clearTimeout(t);
-  }, [state]);
-
   return (
     <div data-ari="avatar" data-state={state} data-face={face} className="pointer-events-none fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
       {state !== "bubble" && caption && (
@@ -206,14 +198,8 @@ function AriAvatar({
           <VoicePanel listening={listening} heard={heard} problem={micProblem} onAnswer={onAnswer} onRetry={onRetryMic} />
         </div>
       )}
-      <div className="pointer-events-auto relative">
-        <div
-          className={`overflow-hidden bg-gradient-to-b from-ari-100 to-coral-400/30 shadow-2xl shadow-ari-500/25 transition-all duration-300 ${FRAME[state]} ${
-            speaking ? "ring-4 ring-ari-400" : "ring-4 ring-white"
-          }`}
-        >
-          <TalkingHeadFace ref={faceRef} />
-        </div>
+      <div className="relative mr-2 transition-all duration-300" style={{ filter: "drop-shadow(0 14px 18px rgb(80 60 160 / 0.25))" }}>
+        <RobotAri ref={faceRef} size={SIZE[state]} speaking={speaking} listening={listening} />
       </div>
     </div>
   );

@@ -99,3 +99,24 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .ari-rise, .ari-stagger > *, .ari-new-card, .ari-pop, .ari-ring, .ari-target, .ari-gradient-animated { animation: none !important; }
 }
+
+/* Ari the robot: hover, blink, an occasional wave, a voice light while talking. */
+@keyframes robot-hover { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-10px) rotate(1.5deg); } }
+@keyframes robot-shadow { 0%, 100% { transform: scaleX(1); opacity: .55; } 50% { transform: scaleX(.75); opacity: .3; } }
+@keyframes robot-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.08); } }
+@keyframes robot-wave { 0%, 80%, 100% { transform: rotate(0); } 84% { transform: rotate(-22deg); } 88% { transform: rotate(6deg); } 92% { transform: rotate(-18deg); } 96% { transform: rotate(2deg); } }
+@keyframes robot-sway { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(5deg); } }
+@keyframes robot-voicebar { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1.25); } }
+@keyframes robot-antenna { 0%, 100% { opacity: .7; } 50% { opacity: 1; } }
+.robot-hover { animation: robot-hover 3.4s ease-in-out infinite; }
+.robot-shadow { animation: robot-shadow 3.4s ease-in-out infinite; }
+.robot-blink { animation: robot-blink 4.6s infinite; transform-box: view-box; }
+.robot-arm-left { animation: robot-wave 9s ease-in-out infinite; transform-box: view-box; }
+.robot-arm-right { animation: robot-sway 3.4s ease-in-out infinite; transform-box: view-box; }
+.robot-head { transition: transform .4s ease; transform-box: view-box; }
+.robot-ari[data-listening="true"] .robot-head { transform: rotate(-7deg); }
+.robot-ari[data-speaking="true"] .robot-head { animation: robot-sway 1.6s ease-in-out infinite; }
+.robot-voicebar { animation: robot-voicebar .32s ease-in-out infinite; transform-box: view-box; }
+.robot-antenna { animation: robot-antenna 2s ease-in-out infinite; }
+.robot-eyes { transition: transform .3s ease; }
+.robot-eyes-up { transform: translateY(-4px); }

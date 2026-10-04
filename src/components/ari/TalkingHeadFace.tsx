@@ -25,9 +25,10 @@ export type FaceHandle = {
 
 const MS_PER_CHAR = 62;
 
-// Ari's free fallback face: a 3D avatar rendered in the browser by TalkingHead.
-export const TalkingHeadFace = forwardRef<FaceHandle, { onReady?: () => void; onError?: () => void }>(function TalkingHeadFace(
-  { onReady, onError },
+// Maria's face: a 3D avatar rendered in the browser by TalkingHead, lip-synced
+// to her voice. gain sets how loud her speech plays.
+export const TalkingHeadFace = forwardRef<FaceHandle, { onReady?: () => void; onError?: () => void; gain?: number; url?: string }>(function TalkingHeadFace(
+  { onReady, onError, gain = 1, url = "/avatars/maria.glb" },
   ref,
 ) {
   const node = useRef<HTMLDivElement>(null);
@@ -79,9 +80,9 @@ export const TalkingHeadFace = forwardRef<FaceHandle, { onReady?: () => void; on
           cameraRotateEnable: false,
           cameraZoomEnable: false,
           cameraPanEnable: false,
-          mixerGainSpeech: 2.2, // Ari's voice is recorded quieter than Maria's
+          mixerGainSpeech: gain,
         });
-        await h.showAvatar({ url: "/avatars/ari.glb", body: "F", avatarMood: "happy", lipsyncLang: "en" });
+        await h.showAvatar({ url, body: "F", avatarMood: "happy", lipsyncLang: "en" });
         if (cancelled) return;
         head.current = h;
         setStatus("ready");
@@ -96,14 +97,14 @@ export const TalkingHeadFace = forwardRef<FaceHandle, { onReady?: () => void; on
     return () => {
       cancelled = true;
     };
-  }, [onReady, onError]);
+  }, [onReady, onError, gain, url]);
 
   return (
     <div className="relative h-full w-full">
       <div ref={node} className="h-full w-full" />
       {status !== "ready" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-indigo-100 text-2xl font-semibold text-indigo-600 dark:bg-indigo-950 dark:text-indigo-300">
-          {status === "loading" ? "…" : "Ari"}
+        <div className="absolute inset-0 flex items-center justify-center bg-coral-400/20 text-2xl font-semibold text-coral-500">
+          {status === "loading" ? "…" : "M"}
         </div>
       )}
     </div>
