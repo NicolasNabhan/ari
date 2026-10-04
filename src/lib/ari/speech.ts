@@ -17,9 +17,11 @@ export type SpeakingFace = {
 };
 
 // Browser voices when ElevenLabs isn't configured: two clearly different people.
+// The voice lists don't overlap, so they never end up with the same voice:
+// Maria is a natural younger adult woman; Ari is playful, quick and high.
 const BROWSER_STYLE: Record<Speaker, BrowserVoiceStyle> = {
-  maria: { prefer: /ava|zoe|allison|samantha|m[oó]nica|paulina/i, pitch: 1.08, rate: 1.02 },
-  ari: { prefer: /samantha|karen|moira|tessa|m[oó]nica/i, pitch: 1.45, rate: 1.08 },
+  maria: { prefer: /ava|zoe|allison|samantha|susan|serena|m[oó]nica/i, pitch: 1.04, rate: 1.0 },
+  ari: { prefer: /karen|tessa|moira|fiona|veena|paulina/i, pitch: 1.65, rate: 1.12 },
 };
 
 const unavailable = new Set<string>();
