@@ -29,7 +29,9 @@ const unavailable = new Set<string>();
 async function elevenLabsSpeech(text: string, lang: string, speaker: Speaker) {
   if (unavailable.has(speaker)) return null;
   try {
-    const res = await fetch("/api/tts", { method: "POST", body: JSON.stringify({ text, lang, speaker }) });
+    // ElevenLabs is usually quick, but a slow answer must not leave a line silent:
+    // after a few seconds, the browser voice reads it instead.
+    const res = await fetch("/api/tts", { method: "POST", body: JSON.stringify({ text, lang, speaker }), signal: AbortSignal.timeout(7000) });
     if (res.status === 503) unavailable.add(speaker);
     if (!res.ok) return null;
     return (await res.json()) as { audio: string; alignment: Alignment };
