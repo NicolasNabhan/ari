@@ -96,22 +96,26 @@ export const RobotAri = forwardRef<FaceHandle, { size: number; speaking: boolean
             </filter>
           </defs>
 
-          {/* arms */}
-          <g className="robot-arm-left" style={{ transformOrigin: "62px 150px" }}>
-            <rect x="34" y="138" width="34" height="16" rx="8" fill="url(#ra-joint)" transform="rotate(-35 62 150)" />
-            <rect x="22" y="112" width="18" height="30" rx="9" fill="url(#ra-white)" transform="rotate(-20 31 127)" />
-            <circle cx="27" cy="108" r="8" fill="url(#ra-joint)" />
+          {/* arms: hang at the sides, attached at the shoulders; the right one waves now and then */}
+          <g className="robot-arm-left" style={{ transformOrigin: "72px 146px" }}>
+            <g transform="rotate(40 72 146)">
+              <rect x="64" y="142" width="16" height="44" rx="8" fill="url(#ra-white)" stroke="#cfd3df" stroke-width="1.5" />
+              <circle cx="72" cy="188" r="8" fill="url(#ra-joint)" />
+            </g>
           </g>
-          <g className="robot-arm-right" style={{ transformOrigin: "138px 150px" }}>
-            <rect x="132" y="138" width="34" height="16" rx="8" fill="url(#ra-joint)" transform="rotate(35 138 150)" />
-            <rect x="160" y="112" width="18" height="30" rx="9" fill="url(#ra-white)" transform="rotate(20 169 127)" />
-            <circle cx="173" cy="108" r="8" fill="url(#ra-joint)" />
+          <g className="robot-arm-right" style={{ transformOrigin: "128px 146px" }}>
+            <g transform="rotate(-40 128 146)">
+              <rect x="120" y="142" width="16" height="44" rx="8" fill="url(#ra-white)" stroke="#cfd3df" stroke-width="1.5" />
+              <circle cx="128" cy="188" r="8" fill="url(#ra-joint)" />
+            </g>
           </g>
 
           {/* body */}
           <ellipse cx="100" cy="168" rx="40" ry="38" fill="url(#ra-white)" />
           <path d="M62 178 Q100 196 138 178 L136 188 Q100 206 64 188 Z" fill="url(#ra-joint)" />
           <circle cx="100" cy="186" r="3.2" fill="#dff8ff" filter="url(#ra-glow)" />
+          <circle cx="72" cy="146" r="7" fill="url(#ra-joint)" />
+          <circle cx="128" cy="146" r="7" fill="url(#ra-joint)" />
 
           {/* legs */}
           <rect x="72" y="198" width="22" height="26" rx="10" fill="url(#ra-white)" />
