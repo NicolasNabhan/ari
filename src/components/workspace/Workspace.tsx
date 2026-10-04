@@ -16,6 +16,8 @@ import {
   BookText,
   Building2,
   CalendarCheck,
+  CalendarDays,
+  FolderOpen,
   ClipboardList,
   Flag,
   GraduationCap,
@@ -40,6 +42,8 @@ import { ScoringSheet } from "./ScoringSheet";
 import { Approvals } from "./Approvals";
 import { Messages, type SentMessage } from "./Messages";
 import { Procedure } from "./Procedure";
+import { WeekView } from "./WeekView";
+import { ContextHub } from "./ContextHub";
 import { DecisionCards } from "@/components/apprentice/DecisionCards";
 import { useApprentice } from "@/components/apprentice/useApprentice";
 import { useRecording } from "@/lib/workspace/useRecording";
@@ -65,6 +69,8 @@ const NAV: { screen: Screen; label: string; icon: LucideIcon }[] = [
   { screen: "approvals", label: "Approvals", icon: Stamp },
   { screen: "messages", label: "Chat & email", icon: MessagesSquare },
   { screen: "procedure", label: "Procedure", icon: BookText },
+  { screen: "week", label: "Week & schedule", icon: CalendarDays },
+  { screen: "context", label: "Files & meetings", icon: FolderOpen },
 ];
 
 function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; lessons?: Lessons; guided: boolean }) {
@@ -299,6 +305,8 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
             />
           )}
           {screen === "procedure" && <Procedure />}
+          {screen === "week" && <WeekView audience={audience} />}
+          {screen === "context" && <ContextHub audience={audience} />}
         </main>
         <aside className="w-80 shrink-0 2xl:w-[22rem] space-y-5 overflow-y-auto border-l border-white/60 bg-white/50 p-4 pb-96 backdrop-blur">
           {teaching ? (

@@ -16,7 +16,7 @@ export type WorkspaceEvent =
 
 export type ApprovalRoute = "self" | "manager" | "cfo";
 
-export type Screen = "inbox" | "requests" | "vendors" | "scoring" | "approvals" | "messages" | "procedure";
+export type Screen = "inbox" | "requests" | "vendors" | "scoring" | "approvals" | "messages" | "procedure" | "week" | "context";
 
 export type TimedEvent = { event: WorkspaceEvent; at: number };
 
