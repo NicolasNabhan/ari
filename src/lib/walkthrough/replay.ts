@@ -22,6 +22,7 @@ export type WalkthroughView = {
   beat: Beat;
   bubble: Bubble | null;
   clicks: Click[]; // what Maria's cursor clicks at this beat
+  clicksShown: number; // how many of them have happened (the presenter shows them one by one)
   workspace: WorkspaceView; // after this beat's clicks
   core: CoreState;
   cards: DecisionCard[];
@@ -41,7 +42,8 @@ function feed(state: CoreState, inputs: CoreInput[], effects: CoreEffect[]): Cor
   return state;
 }
 
-export function replayTo(script: Part[], position: number): WalkthroughView {
+// clicksShown: how many of the last beat's clicks have happened (all by default).
+export function replayTo(script: Part[], position: number, clicksShown = Infinity): WalkthroughView {
   const beats = flatten(script);
   const pos = Math.max(0, Math.min(position, beats.length - 1));
   const effects: CoreEffect[] = [];
@@ -50,7 +52,7 @@ export function replayTo(script: Part[], position: number): WalkthroughView {
   let ws = emptyWorkspace();
   let bubble: Bubble | null = null;
 
-  for (const { beat } of beats.slice(0, pos + 1)) {
+  for (const { beat, index } of beats.slice(0, pos + 1)) {
     // What's said at this beat is decided before the beat changes anything.
     bubble = bubbleFor(beat, core);
     switch (beat.kind) {
@@ -61,7 +63,7 @@ export function replayTo(script: Part[], position: number): WalkthroughView {
         for (const r of beat.reads ?? []) {
           core = feed(core, [{ kind: "attention", record: { ...r, screen: ws.screen, firstAt: at }, at: (at += r.ms) }], effects);
         }
-        for (const c of beat.clicks) {
+        for (const c of index === pos ? beat.clicks.slice(0, clicksShown) : beat.clicks) {
           const out = applyAction(ws, c.action);
           ws = out.ws;
           core = feed(core, out.events.map((event) => ({ kind: "workspace_event", event, at: (at += 1_000) }) as const), effects);
@@ -80,6 +82,7 @@ export function replayTo(script: Part[], position: number): WalkthroughView {
     beat,
     bubble,
     clicks: beat.kind === "act" ? beat.clicks : [],
+    clicksShown: beat.kind === "act" ? Math.min(clicksShown, beat.clicks.length) : 0,
     workspace: ws,
     core,
     cards: core.cardOrder.map((id) => core.cards[id]),

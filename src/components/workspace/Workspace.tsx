@@ -53,7 +53,7 @@ import { ProcedureView } from "@/components/apprentice/ProcedureView";
 import { AriProvider } from "@/components/ari/AriProvider";
 import { WalkthroughPresenter } from "@/components/walkthrough/WalkthroughPresenter";
 import { SCRIPT } from "@/lib/walkthrough/script";
-import { navigate, replayTo } from "@/lib/walkthrough/replay";
+import { navigate, replayTo, type NavAction } from "@/lib/walkthrough/replay";
 import { useGaze } from "@/components/gaze/useGaze";
 import { GazeControl, GazeDot } from "@/components/gaze/GazeControl";
 import { AttentionReview } from "@/components/gaze/AttentionReview";
@@ -104,7 +104,16 @@ function WorkspaceShell({ audience, lessons, guided, walkthrough }: { audience: 
   // Step 1: Maria's session plays from a script; the workspace shows whatever
   // the script has reached, and Ari's cards come from replaying it.
   const [position, setPosition] = useState(0);
-  const wt = useMemo(() => (walkthrough ? replayTo(SCRIPT, position) : null), [walkthrough, position]);
+  // Moving forward one beat, Maria's clicks land one at a time (the presenter
+  // animates them); any other move shows the beat already done.
+  const [clicksShown, setClicksShown] = useState(Infinity);
+  const wt = useMemo(() => (walkthrough ? replayTo(SCRIPT, position, clicksShown) : null), [walkthrough, position, clicksShown]);
+  function walk(action: NavAction) {
+    const next = navigate(SCRIPT, position, action);
+    if (next === position) return;
+    setPosition(next);
+    setClicksShown(action === "next" ? 0 : Infinity);
+  }
   const screen = wt ? wt.workspace.screen : screenLocal;
   const openRequestId = wt ? wt.workspace.openRequestId : openRequestLocal;
   const quoted = wt ? wt.workspace.quoted : quotedLocal;
@@ -382,7 +391,7 @@ function WorkspaceShell({ audience, lessons, guided, walkthrough }: { audience: 
         </aside>
       </div>
       {!started && <IntroOverlay mode={teaching ? "newcomer" : walkthrough ? "walkthrough" : "expert"} onStart={() => setStarted(true)} />}
-      {wt && started && <WalkthroughPresenter view={wt} onNavigate={(action) => setPosition((p) => navigate(SCRIPT, p, action))} />}
+      {wt && started && <WalkthroughPresenter view={wt} onNavigate={walk} onClicksShown={setClicksShown} />}
       {guided && !teaching && started && <CoachBar task={task} cards={cards} ended={review.ended} screen={screen} />}
       {teaching && started && <TipsBar lang={lang} />}
       {review.list && (

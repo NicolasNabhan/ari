@@ -9,11 +9,11 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Maria's cursor (labelled "Maria") glides to each target and performs the real click
-- [ ] Spotlight: the target's strip stays bright, the rest dims, and everything clears after the click
-- [ ] Maria's pre-click line shows as her bubble and is spoken
-- [ ] The vendor, scoring and approval cards show "What Maria looked at" with dwell times
-- [ ] Ari's vendor question uses what she read
-- [ ] Back and Next across these parts keep the screen and the cards consistent
+- [x] Maria's cursor (labelled "Maria") glides to each target and performs the real click
+- [x] Spotlight: the target's strip stays bright, the rest dims, and everything clears after the click
+- [x] Maria's pre-click line shows as her bubble and is spoken
+- [x] The vendor, scoring and approval cards show "What Maria looked at" with dwell times
+- [x] Ari's vendor question uses what she read
+- [x] Back and Next across these parts keep the screen and the cards consistent

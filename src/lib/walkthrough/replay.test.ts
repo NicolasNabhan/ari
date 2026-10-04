@@ -82,6 +82,30 @@ describe("the walkthrough script", () => {
   });
 });
 
+describe("clicks, one at a time", () => {
+  const select = beats.findIndex((b) => b.beat.kind === "act" && b.beat.clicks.some((c) => c.target === "select-brightline"));
+
+  it("before Maria's click lands, the workspace and Ari haven't seen it", () => {
+    const before = replayTo(SCRIPT, select, 0);
+    expect(before.workspace.selected["req-laptops"]).toBeUndefined();
+    expect(before.cards.some((c) => c.stepId === "vendor")).toBe(false);
+    expect(before.bubble).toEqual({ speaker: "maria", text: "Two late orders. I'm going with Brightline." });
+    expect(before.clicks.map((c) => c.target)).toEqual(["select-brightline"]);
+  });
+
+  it("after it lands, it's the same as replaying the whole beat", () => {
+    const after = replayTo(SCRIPT, select, 1);
+    expect(after.workspace).toEqual(replayTo(SCRIPT, select).workspace);
+    expect(after.cards).toEqual(replayTo(SCRIPT, select).cards);
+    expect(after.clicksShown).toBe(1);
+  });
+
+  it("Maria reads Apex's history before choosing, so the vendor card shows it with its dwell time", () => {
+    const vendor = replayTo(SCRIPT, select).cards.find((c) => c.stepId === "vendor")!;
+    expect(vendor.attention?.find((r) => r.target === "history-panel-apex")?.ms).toBe(4200);
+  });
+});
+
 describe("the four buttons", () => {
   it("Next and Back move one beat, and stop at the ends", () => {
     expect(navigate(SCRIPT, 0, "next")).toBe(1);
