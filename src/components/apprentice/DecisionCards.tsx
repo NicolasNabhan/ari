@@ -1,5 +1,7 @@
 import { BookOpen, Check, CircleCheck, Circle, CircleX, Eye, FileWarning, Lightbulb, Palette, Quote, ShieldAlert, Sparkles, type LucideIcon } from "lucide-react";
 import { levelOf, type Level } from "@/lib/apprentice/reasonTypes";
+import { formatDwell, readingKind } from "@/lib/gaze/attention";
+import type { AttentionRecord } from "@/lib/context/types";
 import { isUnwritten } from "@/lib/apprentice/teach";
 import type { DecisionCard, KnowledgeItem, OptionStatus, Reason } from "@/lib/apprentice/types";
 
@@ -20,10 +22,12 @@ export function DecisionCards({
   cards,
   title = "What Ari has learned",
   activeStep = null,
+  expert = "the expert",
 }: {
   cards: DecisionCard[];
   title?: string;
   activeStep?: string | null;
+  expert?: string;
 }) {
   return (
     <section>
@@ -88,6 +92,7 @@ export function DecisionCards({
                 )}
                 {card.reason && <ReasonView reason={card.reason} />}
                 {card.knowledge && card.knowledge.length > 0 && <KnowledgeView items={card.knowledge} />}
+                {card.attention && card.attention.length > 0 && <LookedAt records={card.attention} expert={expert} />}
                 {card.howNotes.length > 0 && (
                   <ul data-ari="how-notes" className="mt-2 space-y-0.5 border-l-2 border-zinc-100 pl-2 text-xs text-zinc-500">
                     {card.howNotes.map((n) => (
@@ -139,6 +144,30 @@ function ReasonView({ reason }: { reason: Reason }) {
         </div>
       )}
       {!fromExpert && !reason.confirmed && <p className="mt-1 text-[11px] italic text-zinc-400">Best guess, not confirmed</p>}
+    </div>
+  );
+}
+
+// Eye tracking: what the expert read before this decision, with dwell times.
+function LookedAt({ records, expert }: { records: AttentionRecord[]; expert: string }) {
+  return (
+    <div data-ari="looked-at" className="mt-2.5">
+      <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+        <Eye className="h-3.5 w-3.5 text-ari-500" /> What {expert} looked at
+      </p>
+      <div className="mt-1.5 flex flex-wrap gap-1.5">
+        {records.slice(0, 4).map((r) => (
+          <span
+            key={`${r.screen}:${r.target}`}
+            title={readingKind(r.ms) === "reading" ? "Read it" : "A glance"}
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] ring-1 ${
+              readingKind(r.ms) === "reading" ? "bg-ari-50 font-medium text-ari-700 ring-ari-200" : "bg-white text-zinc-500 ring-zinc-200"
+            }`}
+          >
+            {r.label} <span className="tabular-nums opacity-70">{formatDwell(r.ms)}</span>
+          </span>
+        ))}
+      </div>
     </div>
   );
 }

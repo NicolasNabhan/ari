@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { AttentionRecord } from "@/lib/context/types";
 import { useAri } from "@/components/ari/AriProvider";
 import { initialState, reduce } from "@/lib/apprentice/core";
 import { ruleJudge } from "@/lib/apprentice/ruleJudge";
@@ -195,6 +196,11 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
     dispatchRef.current({ kind: "tap_to_hear" });
   }
 
+  // Eye tracking (opt-in): one finished fixation.
+  const attend = useCallback((record: AttentionRecord) => {
+    dispatchRef.current({ kind: "attention", record, at: Date.now() });
+  }, []);
+
   const review = {
     list: reviewList,
     ended,
@@ -210,5 +216,5 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
     },
   };
 
-  return { cards, task, teachingStep, allow, askWhy, showMe, lang, tapToHear, setTapToHear, questionWaiting, hearQuestion, review };
+  return { cards, task, teachingStep, allow, askWhy, showMe, lang, tapToHear, setTapToHear, questionWaiting, hearQuestion, review, attend };
 }

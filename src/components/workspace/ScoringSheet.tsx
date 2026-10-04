@@ -35,7 +35,7 @@ export function ScoringSheet({
       <div className="mb-3 flex items-center gap-2 text-sm text-zinc-500">
         <FileSpreadsheet className="h-4 w-4 text-sky-500" /> {request.subject}
       </div>
-      <table className="ari-rise w-full overflow-hidden rounded-2xl border border-zinc-200/70 bg-white text-sm shadow-sm">
+      <table data-ari="scoring-sheet" data-gaze-label="Scoring sheet" className="ari-rise w-full overflow-hidden rounded-2xl border border-zinc-200/70 bg-white text-sm shadow-sm">
         <thead className="bg-zinc-50 text-left text-xs uppercase tracking-wider text-zinc-500">
           <tr>
             <th className="px-4 py-3">Vendor</th>
@@ -48,7 +48,7 @@ export function ScoringSheet({
           {quoted.map((id) => {
             const q = quoteFor(id, request.id)!;
             return (
-              <tr key={id} className="border-t dark:border-zinc-800">
+              <tr key={id} data-ari={`score-row-${id}`} data-gaze-label={`${vendor(id)?.name} in the scoring sheet`} className="border-t dark:border-zinc-800">
                 <td className="px-4 py-3 font-medium">{vendor(id)?.name}</td>
                 <td className="px-4 py-3">{usd(q.total)}</td>
                 <td className="px-4 py-3">{q.leadTimeDays} days</td>

@@ -33,7 +33,7 @@ export function Approvals({
     <section className="space-y-4">
       <PageTitle icon={Stamp} title="Approval" subtitle={request.subject} tone="rose" />
       <div className="rounded-2xl border border-zinc-200/70 bg-white shadow-sm p-5 dark:border-zinc-800 dark:bg-zinc-900">
-        <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
+        <dl data-ari="approval-summary" data-gaze-label="Approval amount and vendor" className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
           <div className="rounded-xl bg-zinc-50 p-3"><dt className="text-xs text-zinc-500">Vendor</dt><dd className="font-semibold">{vendor(vendorId)?.name}</dd></div>
           <div className="rounded-xl bg-zinc-50 p-3"><dt className="text-xs text-zinc-500">Amount</dt><dd className="text-lg font-bold">{usd(amount)}</dd></div>
           <div className="rounded-xl bg-zinc-50 p-3"><dt className="text-xs text-zinc-500">Due</dt><dd className="font-semibold">{request.due}</dd></div>
@@ -48,6 +48,7 @@ export function Approvals({
               <button
                 key={r.to}
                 data-ari={`route-${r.to}`}
+                data-gaze-label={`Approval route: ${r.label}`}
                 onClick={() => onRoute(r.to)}
                 className="ari-lift flex flex-col items-start gap-1 rounded-2xl border border-zinc-200 bg-white p-3 text-left hover:border-ari-400"
               >

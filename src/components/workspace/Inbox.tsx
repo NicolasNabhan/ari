@@ -11,6 +11,7 @@ export function Inbox({ requests, onOpen }: { requests: PurchaseRequest[]; onOpe
           <li key={r.id}>
             <button
               data-ari={`inbox-${r.id}`}
+              data-gaze-label={`Inbox: ${r.subject}`}
               onClick={() => onOpen(r.id)}
               className="ari-lift group flex w-full items-start gap-3 rounded-2xl border border-zinc-200/70 bg-white p-4 text-left shadow-sm"
             >
