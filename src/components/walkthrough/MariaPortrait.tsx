@@ -15,7 +15,7 @@ export function MariaPortrait({ faceRef, speaking, leaving }: { faceRef: RefObje
           speaking ? "ring-4 ring-coral-400" : "ring-4 ring-white"
         }`}
       >
-        <TalkingHeadFace ref={faceRef} gain={1.6} />
+        <TalkingHeadFace ref={faceRef} gain={4} />
       </div>
       <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-coral-500 px-3 py-1 text-xs font-semibold text-white shadow">
         Maria · the expert

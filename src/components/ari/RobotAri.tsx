@@ -8,7 +8,7 @@ import type { FaceHandle } from "./TalkingHeadFace";
 // light bar on its visor flickers while it talks. No frame: it floats on the
 // page as a cut-out. Its voice plays through Web Audio so it can be boosted.
 
-const GAIN = 2.2; // Ari's voice is recorded quieter than Maria's
+const GAIN = 0.9; // a touch under Maria, who plays through her animated face
 
 export const RobotAri = forwardRef<FaceHandle, { size: number; speaking: boolean; listening: boolean }>(function RobotAri(
   { size, speaking, listening },
