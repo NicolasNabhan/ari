@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Clock, Eye, GraduationCap, Headphones, MessageCircleQuestion, ShieldAlert, Sparkles, UserRoundPen } from "lucide-react";
+import { ArrowRight, Bot, Building2, Clock, Eye, GraduationCap, Headphones, MessageCircleQuestion, ShieldAlert, Sparkles, UserRoundPen } from "lucide-react";
 
 export default function Home() {
   return (
@@ -32,26 +32,27 @@ export default function Home() {
       </ul>
       <section className="ari-rise mt-10 rounded-3xl border border-white bg-white/85 p-6 shadow-xl shadow-ari-500/10 backdrop-blur [animation-delay:240ms]">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">What this demo shows</h2>
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div className="flex gap-3">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-white ari-gradient">
-              <Sparkles className="h-5 w-5" />
-            </span>
-            <p className="text-zinc-700">
-              <span className="font-semibold text-zinc-900">Ari is our AI.</span> It learns from veteran employees by watching how they work, asking
-              &ldquo;why?&rdquo; when it can&rsquo;t work out a choice, and then passes that know-how on to the next new employee.
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-coral-500 text-white">
-              <UserRoundPen className="h-5 w-5" />
-            </span>
-            <p className="text-zinc-700">
-              <span className="font-semibold text-zinc-900">Maria is a simulated veteran employee:</span> Procurement Manager at Northwind Supply for
-              eight years. Her work runs in a simulated company workspace (inbox, vendors, approvals, chat).
-            </p>
-          </div>
-        </div>
+        <p className="mt-2 text-lg text-zinc-800">
+          A simulation of how <span className="font-semibold text-ari-700">Ari</span>, our program, learns a job from an expert and passes it on to the
+          next new employee.
+        </p>
+        <ol className="mt-5 grid gap-4 md:grid-cols-4">
+          {[
+            { icon: Bot, tone: "ari-gradient text-white", title: "Ari, our program", text: "A little learner bot. It watches an expert work, analyses each choice, and asks \u201cwhy?\u201d only when it can\u2019t work out the reason." },
+            { icon: Building2, tone: "bg-sky-500 text-white", title: "The office simulator", text: "A pretend company, Northwind Supply, with an inbox, vendors, approvals, a calendar, files and meetings." },
+            { icon: UserRoundPen, tone: "bg-coral-500 text-white", title: "Maria, the expert", text: "A simulated veteran: Procurement Manager for eight years. Ari learns her job by watching her work in the office." },
+            { icon: GraduationCap, tone: "bg-emerald-500 text-white", title: "The new employee", text: "Once Maria leaves, a new employee comes into the same office, and Ari passes down everything it learned from her." },
+          ].map(({ icon: Icon, tone, title, text }, i) => (
+            <li key={title} className="relative rounded-2xl bg-white p-4 ring-1 ring-zinc-200/70">
+              <span className={`grid h-10 w-10 place-items-center rounded-xl ${tone}`}>
+                <Icon className="h-5 w-5" />
+              </span>
+              <span className="mt-3 block text-[11px] font-bold uppercase tracking-widest text-zinc-400">{i + 1}</span>
+              <span className="block font-semibold text-zinc-900">{title}</span>
+              <span className="mt-1 block text-sm text-zinc-600">{text}</span>
+            </li>
+          ))}
+        </ol>
       </section>
       <ol className="ari-stagger mt-6 grid gap-5 md:grid-cols-2">
         <li>
@@ -67,7 +68,7 @@ export default function Home() {
               <Eye className="h-7 w-7" /> Ari learns from Maria
             </span>
             <span className="mt-2 block text-white/90">
-              Step into Maria&rsquo;s shoes for one purchase; a guide shows you each click. Watch Ari observe her work, ask why at the right moments,
+              In the office simulator, step into Maria&rsquo;s shoes for one purchase; a guide shows you each click. Watch Ari analyse her work, ask why at the right moments,
               and sort what it learns: rules that must be followed, strong advice, personal choices, and the rules nobody wrote down.
             </span>
             <span className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 font-semibold text-ari-700">
@@ -88,7 +89,7 @@ export default function Home() {
               <GraduationCap className="h-7 w-7 text-coral-500" /> Ari teaches the new employee
             </span>
             <span className="mt-2 block text-zinc-600">
-              Now you&rsquo;re the new hire. Ari teaches you what it learned from Maria by voice: ask why, say &ldquo;show me&rdquo;, switch to
+              Maria has left. A new employee arrives in the same office: that&rsquo;s you. Ari passes down what it learned from Maria: ask why, say &ldquo;show me&rdquo;, switch to
               Spanish, and watch it stop you before you break Maria&rsquo;s unwritten rule.
             </span>
             <span className="mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2 font-semibold text-white ari-gradient">

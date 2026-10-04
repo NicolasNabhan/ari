@@ -7,7 +7,7 @@ type Point = { icon: React.ReactNode; title: string; text: string };
 const EXPERT: { kicker: string; title: string; lead: string; points: Point[]; cta: string } = {
   kicker: "You're the expert",
   title: "You're Maria, Procurement Manager at Northwind Supply.",
-  lead: "Marketing needs 40 laptops by Friday. Do the purchase the way an experienced manager would, and Ari will learn your job by watching.",
+  lead: "This is the office simulator. You play Maria, the expert. Marketing needs 40 laptops by Friday: do the purchase, and Ari, our learner bot in the bottom-right corner, analyses your work and learns your job.",
   points: [
     { icon: <MousePointerClick className="h-5 w-5" />, title: "You do the real task", text: "A guide at the top tells you exactly what to click and what to say, one step at a time." },
     { icon: <MessageCircleQuestion className="h-5 w-5" />, title: "Ari asks why, only when it can't tell", text: "When a choice surprises it, Ari asks out loud. Answer by voice; the microphone opens by itself." },
@@ -19,7 +19,7 @@ const EXPERT: { kicker: string; title: string; lead: string; points: Point[]; ct
 const NEWCOMER: typeof EXPERT = {
   kicker: "You're the new hire",
   title: "You're Sam, Northwind's new Procurement Manager.",
-  lead: "Maria, who did this job for years, has left. Ari watched how Maria worked. Now it will talk you through your first purchase: 30 office chairs.",
+  lead: "Maria, the expert, has left the office. You're the new employee in the same office simulator. Ari learned Maria's job by watching her, and now passes it down to you, starting with your first purchase: 30 office chairs.",
   points: [
     { icon: <BookOpenCheck className="h-5 w-5" />, title: "Ari explains every step", text: "What to do, what Maria chose, and whether it's a rule or just Maria's style. The next button glows." },
     { icon: <Eye className="h-5 w-5" />, title: "Ask “why?” or say “Show me”", text: "Ari answers in Maria's own words, or takes the cursor and does the step for you." },
