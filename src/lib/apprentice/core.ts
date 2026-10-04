@@ -6,7 +6,7 @@ import { summarize } from "@/lib/gaze/attention";
 import { howNotes } from "./howNotes";
 import { choiceFor, nextStepAfter, request, type Step } from "./normalMap";
 import { scheduleBriefing } from "@/lib/context/briefing";
-import { answerWhy, brokenGuardrail, explainStep, intro, isSpanish, isWhyQuestion, showMe } from "./teach";
+import { tipFor, answerWhy, brokenGuardrail, explainStep, intro, isSpanish, isWhyQuestion, showMe } from "./teach";
 import type { CoreEffect, CoreInput, CoreState, DecisionCard, JudgeCall, JudgeContext, Review, StepId, TodayTask } from "./types";
 
 // Ari stays quiet only when it's at least this sure of its own explanation.
@@ -27,6 +27,7 @@ export function initialState(): CoreState {
     task: null,
     openQuestion: null,
     briefed: false,
+    tipped: [],
     questionQueue: [],
     lessons: null,
     taught: [],
@@ -168,7 +169,17 @@ function teachOnEvent(state: CoreState): Out {
     };
   }
   const step = STEP_AFTER[event.type];
-  if (!state.lessons || !step || state.taught.includes(step)) return { state, effects: [] };
+  if (!state.lessons) return { state, effects: [] };
+  if (!step || state.taught.includes(step)) {
+    // No new step to explain: maybe a tip on what to click next.
+    const earlier = state.events.slice(0, -1).map((e) => e.event);
+    const tip = tipFor(event, earlier, state.lessons, state.lang);
+    if (!tip || state.tipped.includes(tip.id)) return { state, effects: [] };
+    return {
+      state: { ...state, tipped: [...state.tipped, tip.id] },
+      effects: [{ kind: "teach_explain", text: tip.text, highlight: tip.highlight, lang: state.lang }],
+    };
+  }
   const { text, highlight } = explainStep(step, state.lessons, quotedVendorIds(state), state.lang);
   return {
     state: { ...state, taught: [...state.taught, step] },

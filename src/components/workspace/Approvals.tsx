@@ -1,4 +1,4 @@
-import { Briefcase, Crown, FileCheck2, Stamp, UserCheck } from "lucide-react";
+import { Briefcase, Crown, FileCheck2, ShieldAlert, Stamp, UserCheck } from "lucide-react";
 import { quoteFor, vendor, type PurchaseRequest } from "@/lib/northwind/seed";
 import { PageTitle } from "./PageTitle";
 import type { ApprovalRoute } from "@/lib/workspace/events";
@@ -18,6 +18,7 @@ export function Approvals({
   poIssued,
   onRoute,
   onIssuePo,
+  warning = null,
 }: {
   request: PurchaseRequest | null;
   vendorId: string | null;
@@ -25,6 +26,7 @@ export function Approvals({
   poIssued: boolean;
   onRoute: (to: ApprovalRoute) => void;
   onIssuePo: () => void;
+  warning?: string | null; // Ari stopped the last choice; shown until a route goes through
 }) {
   if (!request) return <p className="text-zinc-500">Open a purchase request first.</p>;
   if (!vendorId) return <p className="text-zinc-500">Select a vendor first.</p>;
@@ -38,6 +40,18 @@ export function Approvals({
           <div className="rounded-xl bg-zinc-50 p-3"><dt className="text-xs text-zinc-500">Amount</dt><dd className="text-lg font-bold">{usd(amount)}</dd></div>
           <div className="rounded-xl bg-zinc-50 p-3"><dt className="text-xs text-zinc-500">Due</dt><dd className="font-semibold">{request.due}</dd></div>
         </dl>
+        {!route && warning && (
+          <div data-ari="approval-warning" role="alert" className="ari-pop mt-4 flex gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-rose-500 text-white">
+              <ShieldAlert className="h-5 w-5" />
+            </span>
+            <div className="text-sm">
+              <p className="font-semibold text-rose-800">Ari stopped this</p>
+              <p className="mt-0.5 text-rose-900">{warning}</p>
+              <p className="mt-1 text-rose-700/80">Send it to the CFO, or click your choice again if you really mean it.</p>
+            </div>
+          </div>
+        )}
         {route ? (
           <p className="ari-rise mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 font-semibold text-emerald-700">
             <FileCheck2 className="h-5 w-5" /> {ROUTES.find((r) => r.to === route)!.done}

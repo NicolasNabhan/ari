@@ -105,6 +105,7 @@ function WorkspaceShell({ audience, lessons, guided, walkthrough }: { audience: 
   // Step 1: Maria's session plays from a script; the workspace shows whatever
   // the script has reached, and Ari's cards come from replaying it.
   const [position, setPosition] = useState(0);
+  const [blocked, setBlocked] = useState<string | null>(null); // Ari's warning when it stopped an approval
   const [sidePanel, setSidePanel] = useState<"week" | "context" | null>(null);
   // Moving forward one beat, Maria's clicks land one at a time (the presenter
   // animates them); any other move shows the beat already done.
@@ -128,7 +129,7 @@ function WorkspaceShell({ audience, lessons, guided, walkthrough }: { audience: 
   const [showLog, setShowLog] = useState(false);
   const [started, setStarted] = useState(false);
   const live = useApprentice(bus, profile, audience, started && !walkthrough, lessons);
-  const { teachingStep, allow, askWhy, showMe, lang, tapToHear, setTapToHear, questionWaiting, hearQuestion, review, attend } = live;
+  const { teachingStep, check, askWhy, showMe, lang, tapToHear, setTapToHear, questionWaiting, hearQuestion, review, attend } = live;
   const cards = wt ? wt.cards : live.cards;
   const task = wt ? wt.core.task : live.task;
   const teaching = audience === "newcomer";
@@ -186,7 +187,9 @@ function WorkspaceShell({ audience, lessons, guided, walkthrough }: { audience: 
 
   function route(requestId: string, to: ApprovalRoute) {
     const event = { type: "approval_routed", requestId, vendorId: selected[requestId], amount: amountFor(requestId), to } as const;
-    if (!allow(event)) return; // Ari warned; a second click goes ahead
+    const warning = check(event);
+    if (warning) return setBlocked(warning); // Ari warned; a second click goes ahead
+    setBlocked(null);
     setRoutes((r) => ({ ...r, [requestId]: to }));
     bus.emit(event);
   }
@@ -349,6 +352,7 @@ function WorkspaceShell({ audience, lessons, guided, walkthrough }: { audience: 
               route={openRequestId ? routes[openRequestId] ?? null : null}
               poIssued={openRequestId ? !!issued[openRequestId] : false}
               onRoute={(to) => openRequestId && route(openRequestId, to)}
+              warning={blocked}
               onIssuePo={() => openRequestId && issuePo(openRequestId)}
             />
           )}

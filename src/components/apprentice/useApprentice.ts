@@ -177,9 +177,10 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
     };
   }, [bus, profile, mode, started, lessons]);
 
-  // Before an action happens: false means Ari warned and the action should wait.
-  function allow(event: WorkspaceEvent): boolean {
-    return !dispatchRef.current({ kind: "workspace_intent", event }).some((e) => e.kind === "warn_guardrail");
+  // Before an action happens: Ari's warning if it should wait, otherwise null.
+  function check(event: WorkspaceEvent): string | null {
+    const warning = dispatchRef.current({ kind: "workspace_intent", event }).find((e) => e.kind === "warn_guardrail");
+    return warning?.kind === "warn_guardrail" ? warning.text : null;
   }
 
   async function askWhy() {
@@ -226,5 +227,5 @@ export function useApprentice(bus: EventBus, profile: Profile | null, mode: Mode
     },
   };
 
-  return { cards, task, teachingStep, allow, askWhy, showMe, lang, tapToHear, setTapToHear, questionWaiting, hearQuestion, review, attend };
+  return { cards, task, teachingStep, check, askWhy, showMe, lang, tapToHear, setTapToHear, questionWaiting, hearQuestion, review, attend };
 }

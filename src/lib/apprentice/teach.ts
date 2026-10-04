@@ -2,7 +2,7 @@
 // for a newcomer (in English or Spanish), "show me" cursor moves, and the
 // must-follow rules it checks before they act.
 import { citationsFor } from "@/lib/context/knowledge";
-import { largestOrder, vendor, vendorsQuoting } from "@/lib/northwind/seed";
+import { largestOrder, northwind, vendor, vendorsQuoting } from "@/lib/northwind/seed";
 import type { Profile } from "@/lib/workspace/profile";
 import type { WorkspaceEvent } from "@/lib/workspace/events";
 import { levelOf } from "./reasonTypes";
@@ -32,6 +32,13 @@ type Phrases = {
   cited: (who: string | undefined, where: string, text: string) => string;
   watch: (expert: string) => Record<StepId, string>;
   or: string;
+  tip: {
+    inbox: (subject: string) => string;
+    vendors: string;
+    history: string;
+    approvals: (expert: string) => string;
+    done: (expert: string) => string;
+  };
 };
 
 const EN: Phrases = {
@@ -70,6 +77,13 @@ const EN: Phrases = {
     po: "Watch: once it's approved, issue the purchase order.",
   }),
   or: "or",
+  tip: {
+    inbox: (subject) => `Here's your first request: ${subject}. Click it to open it.`,
+    vendors: "Tick the vendors you want quotes from, then click Request quotes.",
+    history: "When you've decided, click Select vendor on the one you choose.",
+    approvals: (expert) => `Now pick who approves it. The highlighted option is how ${expert} does it.`,
+    done: (expert) => `That's your first purchase done, the way ${expert} would have done it. Ask me why about any step, anytime.`,
+  },
 };
 
 const ES: Phrases = {
@@ -108,6 +122,13 @@ const ES: Phrases = {
     po: "Mira: una vez aprobada, emite la orden de compra.",
   }),
   or: "o",
+  tip: {
+    inbox: (subject) => `Aquí está tu primera solicitud: ${subject}. Haz clic para abrirla.`,
+    vendors: "Marca los proveedores a los que quieres pedir presupuesto y haz clic en Request quotes.",
+    history: "Cuando lo tengas claro, haz clic en Select vendor en el que elijas.",
+    approvals: (expert) => `Ahora elige quién lo aprueba. La opción resaltada es como lo hace ${expert}.`,
+    done: (expert) => `Listo, tu primera compra está hecha, como la habría hecho ${expert}. Pregúntame por qué en cualquier paso.`,
+  },
 };
 
 // Spanish words for option labels, so the choice reads naturally.
@@ -243,4 +264,27 @@ export function brokenGuardrail(event: WorkspaceEvent, lessons: Lessons): Guardr
         (!g.onlyNewSuppliers || largestOrder(event.vendorId) <= g.minAmount),
     ) ?? null
   );
+}
+
+// Between the bigger explanations: exactly what to click next, once each.
+export type Tip = { id: string; text: string; highlight?: string };
+
+export function tipFor(event: WorkspaceEvent, history: WorkspaceEvent[], lessons: Lessons, lang: Lang = "en-US"): Tip | null {
+  const p = phrases(lang).tip;
+  const happened = (type: WorkspaceEvent["type"]) => history.some((e) => e.type === type);
+  const request = northwind.requests.find((r) => r.audience === "newcomer");
+  if (event.type === "screen_opened" && event.screen === "inbox" && request && !happened("request_opened")) {
+    return { id: "inbox", text: p.inbox(request.subject), highlight: `inbox-${request.id}` };
+  }
+  if (event.type === "screen_opened" && event.screen === "vendors" && request && !happened("quotes_requested")) {
+    const first = vendorsQuoting(request.id)[0];
+    return { id: "vendors", text: p.vendors, highlight: first ? `tick-${first.id}` : undefined };
+  }
+  if (event.type === "delivery_history_opened" && !happened("vendor_selected")) return { id: "history", text: p.history };
+  if (event.type === "screen_opened" && event.screen === "approvals" && happened("vendor_selected") && !happened("approval_routed")) {
+    const rule = lessons.guardrails.find((g) => g.step === "approval");
+    return { id: "approvals", text: p.approvals(lessons.expert), highlight: rule ? `route-${rule.requiredOption}` : undefined };
+  }
+  if (event.type === "po_issued") return { id: "done", text: p.done(lessons.expert) };
+  return null;
 }
