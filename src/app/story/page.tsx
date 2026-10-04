@@ -1,12 +1,12 @@
 import { Workspace } from "@/components/workspace/Workspace";
 import { StoryStage } from "@/components/story/StoryStage";
-import { StoryPlayer } from "@/components/story/StoryPlayer";
+import { MariaStage } from "@/components/story/MariaStage";
 
 export default function StoryPage() {
   return (
     <StoryStage>
       <Workspace audience="expert" story>
-        <StoryPlayer />
+        <MariaStage />
       </Workspace>
     </StoryStage>
   );
