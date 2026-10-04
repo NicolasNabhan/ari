@@ -1,6 +1,6 @@
 # Spec: Ari, the story version (real-time 3D characters)
 
-Status: open
+Status: closed (abandoned 2026-10-04)
 Label: ready-for-agent
 
 Re-prototype of the judge experience. First decided 2026-10-03 as AI-video clips. Changed the same day to **real-time 3D characters** rendered with three.js on top of the real website, because the clips couldn't line up with real buttons and weren't interactive. Reuses the workspace, the Apprentice Core, teach mode and the voice stack.

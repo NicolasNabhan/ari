@@ -68,7 +68,7 @@ export default function Home() {
               <Eye className="h-7 w-7" /> Ari learns from Maria
             </span>
             <span className="mt-2 block text-white/90">
-              In the office simulator, step into Maria&rsquo;s shoes for one purchase; a guide shows you each click. Watch Ari analyse her work, ask why at the right moments,
+              In the office simulator, watch Maria buy 40 laptops while Ari analyses her work. Go at your own pace with Next and Back. See Ari ask why at the right moments,
               and sort what it learns: rules that must be followed, strong advice, personal choices, and the rules nobody wrote down.
             </span>
             <span className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 font-semibold text-ari-700">

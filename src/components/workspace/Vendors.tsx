@@ -23,6 +23,7 @@ export function Vendors({
   onRequestQuotes,
   onSelect,
   onOpenHistory,
+  controlled,
 }: {
   request: PurchaseRequest | null;
   quoted: string[];
@@ -30,9 +31,12 @@ export function Vendors({
   onRequestQuotes: (requestId: string, vendorIds: string[]) => void;
   onSelect: (requestId: string, vendorId: string) => void;
   onOpenHistory: (vendorId: string) => void;
+  controlled?: { ticked: string[]; historyFor: string | null }; // the walkthrough drives these
 }) {
-  const [historyFor, setHistoryFor] = useState<string | null>(null);
-  const [ticked, setTicked] = useState<string[]>([]);
+  const [historyLocal, setHistoryFor] = useState<string | null>(null);
+  const [tickedLocal, setTicked] = useState<string[]>([]);
+  const historyFor = controlled ? controlled.historyFor : historyLocal;
+  const ticked = controlled ? controlled.ticked : tickedLocal;
 
   if (!request) {
     return <EmptyState text="Open a purchase request first: Inbox, then Work on this request." />;

@@ -74,3 +74,23 @@ export async function speak(face: SpeakingFace | null, text: string, opts: { lan
   }
   await speakWithBrowser(text, lang, face, opts.speaker);
 }
+
+// A speaker with no face on screen (Maria in the walkthrough): ElevenLabs
+// audio plays as it is, and the browser voice is the fallback.
+export function voiceOnly(): SpeakingFace {
+  let audio: HTMLAudioElement | null = null;
+  return {
+    ready: () => true,
+    speakAudio: (audioBase64) =>
+      new Promise<void>((resolve, reject) => {
+        audio?.pause();
+        audio = new Audio(`data:audio/mpeg;base64,${audioBase64}`);
+        audio.onended = () => resolve();
+        audio.onerror = () => reject(new Error("audio failed"));
+        audio.play().catch(reject);
+      }),
+    mouthWord: () => {},
+    mouth: () => {},
+    stop: () => audio?.pause(),
+  };
+}

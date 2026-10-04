@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { northwind, quoteFor } from "@/lib/northwind/seed";
 import type { ApprovalRoute, Screen } from "@/lib/workspace/events";
@@ -51,15 +51,28 @@ import { useRecording } from "@/lib/workspace/useRecording";
 import { ReviewList } from "@/components/apprentice/ReviewList";
 import { ProcedureView } from "@/components/apprentice/ProcedureView";
 import { AriProvider } from "@/components/ari/AriProvider";
+import { WalkthroughPresenter } from "@/components/walkthrough/WalkthroughPresenter";
+import { SCRIPT } from "@/lib/walkthrough/script";
+import { navigate, replayTo } from "@/lib/walkthrough/replay";
 import { useGaze } from "@/components/gaze/useGaze";
 import { GazeControl, GazeDot } from "@/components/gaze/GazeControl";
 import { AttentionReview } from "@/components/gaze/AttentionReview";
 
-export function Workspace({ audience, lessons, guided = false }: { audience: Audience; lessons?: Lessons; guided?: boolean }) {
+export function Workspace({
+  audience,
+  lessons,
+  guided = false,
+  walkthrough = false,
+}: {
+  audience: Audience;
+  lessons?: Lessons;
+  guided?: boolean;
+  walkthrough?: boolean;
+}) {
   return (
     <EventBusProvider>
       <AriProvider>
-        <WorkspaceShell audience={audience} lessons={lessons} guided={guided} />
+        <WorkspaceShell audience={audience} lessons={lessons} guided={guided} walkthrough={walkthrough} />
       </AriProvider>
     </EventBusProvider>
   );
@@ -77,40 +90,48 @@ const NAV: { screen: Screen; label: string; icon: LucideIcon }[] = [
   { screen: "context", label: "Files & meetings", icon: FolderOpen },
 ];
 
-function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; lessons?: Lessons; guided: boolean }) {
+function WorkspaceShell({ audience, lessons, guided, walkthrough }: { audience: Audience; lessons?: Lessons; guided: boolean; walkthrough: boolean }) {
   const bus = useEventBus();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const [screen, setScreen] = useState<Screen>("inbox");
-  const [openRequestId, setOpenRequestId] = useState<string | null>(null);
-  const [quoted, setQuoted] = useState<Record<string, string[]>>({});
-  const [selected, setSelected] = useState<Record<string, string>>({});
-  const [scores, setScores] = useState<Record<string, Record<string, number>>>({});
-  const [routes, setRoutes] = useState<Record<string, ApprovalRoute>>({});
-  const [issued, setIssued] = useState<Record<string, boolean>>({});
+  const [screenLocal, setScreen] = useState<Screen>("inbox");
+  const [openRequestLocal, setOpenRequestId] = useState<string | null>(null);
+  const [quotedLocal, setQuoted] = useState<Record<string, string[]>>({});
+  const [selectedLocal, setSelected] = useState<Record<string, string>>({});
+  const [scoresLocal, setScores] = useState<Record<string, Record<string, number>>>({});
+  const [routesLocal, setRoutes] = useState<Record<string, ApprovalRoute>>({});
+  const [issuedLocal, setIssued] = useState<Record<string, boolean>>({});
+  // Step 1: Maria's session plays from a script; the workspace shows whatever
+  // the script has reached, and Ari's cards come from replaying it.
+  const [position, setPosition] = useState(0);
+  const wt = useMemo(() => (walkthrough ? replayTo(SCRIPT, position) : null), [walkthrough, position]);
+  const screen = wt ? wt.workspace.screen : screenLocal;
+  const openRequestId = wt ? wt.workspace.openRequestId : openRequestLocal;
+  const quoted = wt ? wt.workspace.quoted : quotedLocal;
+  const selected = wt ? wt.workspace.selected : selectedLocal;
+  const scores = wt ? wt.workspace.scores : scoresLocal;
+  const routes = wt ? wt.workspace.routes : routesLocal;
+  const issued = wt ? wt.workspace.issued : issuedLocal;
   const [sent, setSent] = useState<SentMessage[]>([]);
   const [callWith, setCallWith] = useState<string | null>(null);
   const [showLog, setShowLog] = useState(false);
   const [started, setStarted] = useState(false);
-  const { cards, task, teachingStep, allow, askWhy, showMe, lang, tapToHear, setTapToHear, questionWaiting, hearQuestion, review, attend } = useApprentice(
-    bus,
-    profile,
-    audience,
-    started,
-    lessons,
-  );
+  const live = useApprentice(bus, profile, audience, started && !walkthrough, lessons);
+  const { teachingStep, allow, askWhy, showMe, lang, tapToHear, setTapToHear, questionWaiting, hearQuestion, review, attend } = live;
+  const cards = wt ? wt.cards : live.cards;
+  const task = wt ? wt.core.task : live.task;
   const teaching = audience === "newcomer";
   useRecording(!!profile);
   // Eye tracking: opt-in, expert only, while the session runs.
-  const gaze = useGaze({ screen, enabled: !teaching && started && !review.ended, onRecord: attend });
+  const gaze = useGaze({ screen, enabled: !teaching && !walkthrough && started && !review.ended, onRecord: attend });
   const [gazeReview, setGazeReview] = useState<"auto" | "open" | "closed">("auto");
 
   useEffect(() => {
     // Browser storage is only readable after mount.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setProfile(loadProfile(audience));
+    setProfile(walkthrough ? MARIA : loadProfile(audience));
     setLoaded(true);
-  }, [audience]);
+  }, [audience, walkthrough]);
 
   const requests = northwind.requests.filter((r) => r.audience === audience);
   const currentRequest = () => requests.find((r) => r.id === openRequestId) ?? null;
@@ -217,20 +238,20 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
               <PhoneOff className="h-4 w-4" /> End call with {northwind.people.find((p) => p.id === callWith)?.name.split(" ")[0]}
             </button>
           )}
-          {!teaching && started && !review.ended && <GazeControl gaze={gaze} />}
+          {!teaching && !walkthrough && started && !review.ended && <GazeControl gaze={gaze} />}
           {review.ended && gaze.records.length > 0 && (
             <button data-ari="gaze-replay" onClick={() => setGazeReview("open")} className="ari-rise ari-lift flex items-center gap-1.5 rounded-full border border-ari-200 bg-white px-3 py-1.5 font-medium text-ari-700">
               <ScanEye className="h-4 w-4" /> Where your eyes went
             </button>
           )}
-          {!teaching && started && (
+          {!teaching && !walkthrough && started && (
             <label className="flex cursor-pointer items-center gap-1.5 rounded-full px-2 py-1 text-zinc-600 hover:bg-zinc-100" title="Ari shows a signal instead of speaking up; tap it when you're ready">
               <input data-ari="tap-to-hear" type="checkbox" className="accent-[var(--color-ari-600)]" checked={tapToHear} onChange={(e) => setTapToHear(e.target.checked)} />
               <BellRing className="h-4 w-4 text-zinc-400" /> Tap to hear
             </label>
           )}
-          {started && !teaching && !review.ended && (
-            <button data-ari="end-session" onClick={review.end} className="ari-lift flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-3 py-1.5 font-medium text-zinc-700">
+          {started && !teaching && (wt ? !wt.core.ended : !review.ended) && (
+            <button data-ari="end-session" onClick={wt ? undefined : review.end} className="ari-lift flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-3 py-1.5 font-medium text-zinc-700">
               <Flag className="h-4 w-4" /> End session
             </button>
           )}
@@ -288,6 +309,7 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
               onRequestQuotes={requestQuotes}
               onSelect={selectVendor}
               onOpenHistory={(vendorId) => bus.emit({ type: "delivery_history_opened", vendorId })}
+              controlled={wt ? { ticked: wt.workspace.ticked, historyFor: wt.workspace.historyFor } : undefined}
             />
           )}
           {screen === "scoring" && (
@@ -296,6 +318,7 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
               quoted={openRequestId ? quoted[openRequestId] ?? [] : []}
               scores={openRequestId ? scores[openRequestId] ?? {} : {}}
               onScore={(vendorId, score) => openRequestId && enterScore(openRequestId, vendorId, score)}
+              controlledDraft={wt?.workspace.scoreDraft}
             />
           )}
           {screen === "approvals" && (
@@ -358,7 +381,8 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
           </div>
         </aside>
       </div>
-      {!started && <IntroOverlay mode={teaching ? "newcomer" : "expert"} onStart={() => setStarted(true)} />}
+      {!started && <IntroOverlay mode={teaching ? "newcomer" : walkthrough ? "walkthrough" : "expert"} onStart={() => setStarted(true)} />}
+      {wt && started && <WalkthroughPresenter view={wt} onNavigate={(action) => setPosition((p) => navigate(SCRIPT, p, action))} />}
       {guided && !teaching && started && <CoachBar task={task} cards={cards} ended={review.ended} screen={screen} />}
       {teaching && started && <TipsBar lang={lang} />}
       {review.list && (

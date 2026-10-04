@@ -1,6 +1,6 @@
 # 04: Lip-synced cartoon mouth
 
-Status: open
+Status: closed (abandoned 2026-10-04: the 3D story was dropped)
 Blocked by: 01
 
 - [ ] Viseme mouth on the head bone, matching her painted style

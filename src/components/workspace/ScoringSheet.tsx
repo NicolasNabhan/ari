@@ -12,13 +12,16 @@ export function ScoringSheet({
   quoted,
   scores,
   onScore,
+  controlledDraft,
 }: {
   request: PurchaseRequest | null;
   quoted: string[];
   scores: Record<string, number>;
   onScore: (vendorId: string, score: number) => void;
+  controlledDraft?: Record<string, string>; // the walkthrough types the scores
 }) {
-  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [draftLocal, setDraft] = useState<Record<string, string>>({});
+  const draft = controlledDraft ?? draftLocal;
   if (!request) return <p className="mt-10 text-center text-zinc-500">Open a purchase request first.</p>;
   if (quoted.length === 0) return <p className="mt-10 text-center text-zinc-500">Request quotes first; vendors appear here once they&rsquo;ve quoted.</p>;
 

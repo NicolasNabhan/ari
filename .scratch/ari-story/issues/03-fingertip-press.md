@@ -1,6 +1,6 @@
 # 03: Fingertip-accurate presses and telescoping pointer
 
-Status: open
+Status: closed (abandoned 2026-10-04: the 3D story was dropped)
 Blocked by: 02
 
 - [ ] MariaActor API (walkTo, face, wave, point, pressAt)
