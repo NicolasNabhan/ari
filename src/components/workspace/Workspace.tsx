@@ -47,19 +47,11 @@ import { ReviewList } from "@/components/apprentice/ReviewList";
 import { ProcedureView } from "@/components/apprentice/ProcedureView";
 import { AriProvider } from "@/components/ari/AriProvider";
 
-export function Workspace({
-  audience,
-  lessons,
-  guided = false,
-  story = false,
-  hideAvatar = story,
-  children,
-}: React.PropsWithChildren<{ audience: Audience; lessons?: Lessons; guided?: boolean; story?: boolean; hideAvatar?: boolean }>) {
+export function Workspace({ audience, lessons, guided = false }: { audience: Audience; lessons?: Lessons; guided?: boolean }) {
   return (
     <EventBusProvider>
-      <AriProvider hideAvatar={hideAvatar}>
-        <WorkspaceShell audience={audience} lessons={lessons} guided={guided} story={story} />
-        {children}
+      <AriProvider>
+        <WorkspaceShell audience={audience} lessons={lessons} guided={guided} />
       </AriProvider>
     </EventBusProvider>
   );
@@ -75,7 +67,7 @@ const NAV: { screen: Screen; label: string; icon: LucideIcon }[] = [
   { screen: "procedure", label: "Procedure", icon: BookText },
 ];
 
-function WorkspaceShell({ audience, lessons, guided, story }: { audience: Audience; lessons?: Lessons; guided: boolean; story: boolean }) {
+function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; lessons?: Lessons; guided: boolean }) {
   const bus = useEventBus();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -101,12 +93,11 @@ function WorkspaceShell({ audience, lessons, guided, story }: { audience: Audien
   useRecording(!!profile);
 
   useEffect(() => {
-    // Browser storage is only readable after mount. In the story, Maria is a
-    // character, so there's no profile form.
+    // Browser storage is only readable after mount.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setProfile(story ? (audience === "expert" ? MARIA : NEWCOMER) : loadProfile(audience));
+    setProfile(loadProfile(audience));
     setLoaded(true);
-  }, [audience, story]);
+  }, [audience]);
 
   const requests = northwind.requests.filter((r) => r.audience === audience);
   const currentRequest = () => requests.find((r) => r.id === openRequestId) ?? null;
@@ -184,7 +175,7 @@ function WorkspaceShell({ audience, lessons, guided, story }: { audience: Audien
 
   const userName = profile.name;
   return (
-    <div className={`flex flex-col text-zinc-900 ${story ? "h-full overflow-hidden" : "min-h-screen"}`}>
+    <div className="flex min-h-screen flex-col text-zinc-900">
       <header className="sticky top-0 z-30 flex h-[60px] items-center justify-between gap-4 border-b border-white/60 bg-white/80 px-5 backdrop-blur">
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2" title="Back to start">
@@ -237,7 +228,7 @@ function WorkspaceShell({ audience, lessons, guided, story }: { audience: Audien
           </span>
         </div>
       </header>
-      <div className={`flex flex-1 ${story ? "min-h-0" : ""}`}>
+      <div className="flex flex-1">
         <nav className="w-[4.5rem] shrink-0 p-3 xl:w-56">
           <ul className="ari-stagger space-y-1">
             {NAV.map(({ screen: s, label, icon: Icon }) => (
@@ -259,7 +250,7 @@ function WorkspaceShell({ audience, lessons, guided, story }: { audience: Audien
             ))}
           </ul>
         </nav>
-        <main key={screen} className={`ari-rise min-w-0 flex-1 p-6 ${story ? "overflow-y-auto" : ""} ${guided && !teaching && started ? "pt-56" : teaching && started ? "pt-24" : ""}`}>          {screen === "inbox" && <Inbox requests={requests} onOpen={openRequest} />}
+        <main key={screen} className={`ari-rise min-w-0 flex-1 p-6 ${guided && !teaching && started ? "pt-56" : teaching && started ? "pt-24" : ""}`}>          {screen === "inbox" && <Inbox requests={requests} onOpen={openRequest} />}
           {screen === "requests" && (
             <RequestQueue
               requests={requests}
@@ -346,8 +337,7 @@ function WorkspaceShell({ audience, lessons, guided, story }: { audience: Audien
           </div>
         </aside>
       </div>
-      {/* The story's own scenes introduce Maria; the learning part after it gets a hand-over intro. */}
-      {!started && (!story || teaching) && <IntroOverlay mode={teaching ? (story ? "story" : "newcomer") : "expert"} onStart={() => setStarted(true)} />}
+      {!started && <IntroOverlay mode={teaching ? "newcomer" : "expert"} onStart={() => setStarted(true)} />}
       {guided && !teaching && started && <CoachBar task={task} cards={cards} ended={review.ended} screen={screen} />}
       {teaching && started && <TipsBar lang={lang} />}
       {review.list && (

@@ -6,14 +6,12 @@ Built for the 7th Hack-Nation Global AI Hackathon, Challenge 1: *The AI Apprenti
 
 ## Try it
 
-Open the live demo (Chrome, sound on). The start page leads with the story:
+Open the live demo and pick a mode (Chrome, sound on):
 
-1. **Watch Ari learn from Maria** (`/story`). An animated story played on top of the real workspace. Maria, Northwind Supply's Procurement Manager, handles a purchase request while Ari, her pet apprentice, watches and asks "why?" when a choice surprises it. Then Maria leaves and hands over to Ari.
-2. **Ari teaches you** (`/learn?from=story`, or **Skip to learning** on the start page, 1 minute). The story continues on the same stage: you're the new hire, and Ari talks you through your first purchase. It explains each step out loud, answers "why?" in Maria's own words, does a step for you with its own cursor ("Show me"), switches to Spanish if you ask in Spanish, and stops you before you approve a $30k order from a new supplier, because of a rule Maria never wrote down.
+1. **Learn from Maria** (1 minute). You're a new hire at Northwind Supply. Ari teaches you how Maria, the Procurement Manager, handles a purchase request: it explains each step out loud, answers "why?", does a step for you with its own cursor ("Show me"), switches to Spanish if you ask in Spanish, and stops you before you approve a $30k order from a new supplier, because of a rule Maria never wrote down.
+2. **Teach Ari as Maria** (3 minutes, guided). You play the expert. Script cards suggest what to do and say, but Ari reacts for real. At the end, Ari teaches a newcomer **using your own answers**.
 
-**Classic guided mode** (`/teach`, 3 minutes, linked at the bottom of the start page). You play Maria yourself. Script cards suggest what to do and say, but Ari reacts for real. At the end, Ari teaches a newcomer **using your own answers** (`/learn?from=you`).
-
-The story scenes and their 3D characters (Maria and Ari the pet) are still in progress; until the pet lands, Ari appears as the face in the corner while it teaches. No microphone? Type your answers in the box under Ari.
+No microphone? Type your answers in the box under Ari.
 
 ## What Ari does
 

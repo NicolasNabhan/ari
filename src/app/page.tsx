@@ -1,25 +1,5 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  Clapperboard,
-  Clock,
-  GraduationCap,
-  Headphones,
-  MessageCircleQuestion,
-  MousePointerClick,
-  Play,
-  ShieldAlert,
-  SkipForward,
-  Sparkles,
-  UserRoundPen,
-} from "lucide-react";
-
-// The story: Maria buys something, Ari asks why, then Ari teaches you.
-const STORY_BEATS = [
-  { icon: MousePointerClick, text: "Maria makes a real purchase" },
-  { icon: MessageCircleQuestion, text: "Ari asks her why" },
-  { icon: GraduationCap, text: "Then Ari teaches you" },
-];
+import { ArrowRight, Clock, GraduationCap, Headphones, MessageCircleQuestion, ShieldAlert, Sparkles, UserRoundPen } from "lucide-react";
 
 export default function Home() {
   return (
@@ -50,64 +30,44 @@ export default function Home() {
           </li>
         ))}
       </ul>
-      <div className="ari-stagger mt-10 grid gap-5 md:grid-cols-[1.6fr_1fr]">
+      <div className="ari-stagger mt-10 grid gap-5 md:grid-cols-2">
         <Link
-          href="/story"
-          data-ari="mode-story"
-          className="ari-lift group relative overflow-hidden rounded-3xl p-8 text-white shadow-xl shadow-ari-500/30 ari-gradient-animated"
+          href="/learn"
+          data-ari="mode-learn"
+          className="ari-lift group relative overflow-hidden rounded-3xl p-7 text-white shadow-xl shadow-ari-500/30 ari-gradient-animated"
         >
           <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-white/80">
-            <Clapperboard className="h-3.5 w-3.5" /> Start here · the story
+            <Clock className="h-3.5 w-3.5" /> Start here · 1 minute
           </span>
-          <span className="mt-3 flex items-center gap-3 text-3xl font-semibold leading-tight">Watch Ari learn from Maria</span>
-          <span className="mt-3 block max-w-lg text-white/90">
-            Maria, Northwind&rsquo;s Procurement Manager, shows Ari, her pet apprentice, how she buys things. Ari asks &ldquo;why?&rdquo; when a
-            choice surprises it. Then Maria leaves, and Ari teaches you, the new hire.
+          <span className="mt-3 flex items-center gap-3 text-2xl font-semibold">
+            <GraduationCap className="h-7 w-7" /> Learn from Maria
           </span>
-          <ol className="mt-5 flex flex-wrap gap-2 text-sm">
-            {STORY_BEATS.map(({ icon: Icon, text }, i) => (
-              <li key={text} className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 font-medium ring-1 ring-white/25">
-                <span className="grid h-5 w-5 place-items-center rounded-full bg-white text-[11px] font-bold text-ari-700">{i + 1}</span>
-                <Icon className="h-4 w-4" /> {text}
-              </li>
-            ))}
-          </ol>
-          <span className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 font-semibold text-ari-700 shadow-lg">
-            <Play className="h-4 w-4 fill-current" /> Watch the story <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </span>
-        </Link>
-        <Link
-          href="/learn?from=story"
-          data-ari="mode-learn"
-          className="ari-lift group flex flex-col rounded-3xl border border-white bg-white/85 p-7 shadow-xl shadow-ari-500/10 backdrop-blur"
-        >
-          <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-ari-600">
-            <Clock className="h-3.5 w-3.5" /> 1 minute
-          </span>
-          <span className="mt-3 flex items-center gap-3 text-2xl font-semibold text-zinc-900">
-            <SkipForward className="h-7 w-7 text-coral-500" /> Skip to learning
-          </span>
-          <span className="mt-2 block text-zinc-600">
-            Maria has already left. You&rsquo;re the new hire, and Ari talks you through your first purchase, and stops you before you break
+          <span className="mt-2 block text-white/90">
+            You&rsquo;re the new hire. Ari teaches you how Maria, Northwind&rsquo;s Procurement Manager, buys things, and stops you before you break
             Maria&rsquo;s unwritten rule.
           </span>
-          <span className="mt-auto inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 font-semibold text-white ari-gradient max-md:mt-6">
+          <span className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 font-semibold text-ari-700">
             Start learning <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </span>
         </Link>
-      </div>
-      <div className="mt-8 flex flex-wrap items-center justify-between gap-4 text-sm text-zinc-500">
-        <p className="flex items-center gap-2">
-          <Headphones className="h-4 w-4" /> Best in Chrome with sound on. Ari will ask to use your microphone.
-        </p>
-        <Link
-          href="/teach"
-          data-ari="mode-teach"
-          className="flex items-center gap-1.5 rounded-full px-3 py-1.5 font-medium text-zinc-600 ring-1 ring-zinc-200 transition-colors hover:bg-white hover:text-ari-700"
-        >
-          <UserRoundPen className="h-4 w-4" /> Classic guided mode <span className="text-zinc-400">· teach Ari as Maria yourself</span>
+        <Link href="/teach" data-ari="mode-teach" className="ari-lift group rounded-3xl border border-white bg-white/85 p-7 shadow-xl shadow-ari-500/10 backdrop-blur">
+          <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-ari-600">
+            <Clock className="h-3.5 w-3.5" /> Guided · 3 minutes
+          </span>
+          <span className="mt-3 flex items-center gap-3 text-2xl font-semibold text-zinc-900">
+            <UserRoundPen className="h-7 w-7 text-coral-500" /> Teach Ari as Maria
+          </span>
+          <span className="mt-2 block text-zinc-600">
+            Play the expert. A guide shows you what to do; Ari watches, asks why at the right moments, then teaches a newcomer using your own answers.
+          </span>
+          <span className="mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2 font-semibold text-white ari-gradient">
+            Start teaching <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </span>
         </Link>
       </div>
+      <p className="mt-8 flex items-center gap-2 text-sm text-zinc-500">
+        <Headphones className="h-4 w-4" /> Best in Chrome with sound on. Ari will ask to use your microphone.
+      </p>
     </main>
   );
 }
