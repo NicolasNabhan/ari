@@ -52,11 +52,12 @@ export function Workspace({
   lessons,
   guided = false,
   story = false,
+  hideAvatar = story,
   children,
-}: React.PropsWithChildren<{ audience: Audience; lessons?: Lessons; guided?: boolean; story?: boolean }>) {
+}: React.PropsWithChildren<{ audience: Audience; lessons?: Lessons; guided?: boolean; story?: boolean; hideAvatar?: boolean }>) {
   return (
     <EventBusProvider>
-      <AriProvider hideAvatar={story}>
+      <AriProvider hideAvatar={hideAvatar}>
         <WorkspaceShell audience={audience} lessons={lessons} guided={guided} story={story} />
         {children}
       </AriProvider>
@@ -236,7 +237,7 @@ function WorkspaceShell({ audience, lessons, guided, story }: { audience: Audien
           </span>
         </div>
       </header>
-      <div className="flex flex-1">
+      <div className={`flex flex-1 ${story ? "min-h-0" : ""}`}>
         <nav className="w-[4.5rem] shrink-0 p-3 xl:w-56">
           <ul className="ari-stagger space-y-1">
             {NAV.map(({ screen: s, label, icon: Icon }) => (
@@ -258,7 +259,7 @@ function WorkspaceShell({ audience, lessons, guided, story }: { audience: Audien
             ))}
           </ul>
         </nav>
-        <main key={screen} className={`ari-rise min-w-0 flex-1 p-6 ${guided && !teaching && started ? "pt-56" : teaching && started ? "pt-24" : ""}`}>          {screen === "inbox" && <Inbox requests={requests} onOpen={openRequest} />}
+        <main key={screen} className={`ari-rise min-w-0 flex-1 p-6 ${story ? "overflow-y-auto" : ""} ${guided && !teaching && started ? "pt-56" : teaching && started ? "pt-24" : ""}`}>          {screen === "inbox" && <Inbox requests={requests} onOpen={openRequest} />}
           {screen === "requests" && (
             <RequestQueue
               requests={requests}
@@ -345,7 +346,8 @@ function WorkspaceShell({ audience, lessons, guided, story }: { audience: Audien
           </div>
         </aside>
       </div>
-      {!started && !story && <IntroOverlay mode={teaching ? "newcomer" : "expert"} onStart={() => setStarted(true)} />}
+      {/* The story's own scenes introduce Maria; the learning part after it gets a hand-over intro. */}
+      {!started && (!story || teaching) && <IntroOverlay mode={teaching ? (story ? "story" : "newcomer") : "expert"} onStart={() => setStarted(true)} />}
       {guided && !teaching && started && <CoachBar task={task} cards={cards} ended={review.ended} screen={screen} />}
       {teaching && started && <TipsBar lang={lang} />}
       {review.list && (

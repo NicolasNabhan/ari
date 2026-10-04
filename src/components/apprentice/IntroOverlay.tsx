@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpenCheck, GraduationCap, MessageCircleQuestion, MousePointerClick, ShieldAlert, Sparkles, Languages, Eye } from "lucide-react";
+import { BookOpenCheck, GraduationCap, MessageCircleQuestion, MousePointerClick, ShieldAlert, Sparkles, Languages, Eye, DoorOpen } from "lucide-react";
 
 type Point = { icon: React.ReactNode; title: string; text: string };
 
@@ -29,14 +29,28 @@ const NEWCOMER: typeof EXPERT = {
   cta: "Start learning",
 };
 
-export function IntroOverlay({ mode, onStart }: { mode: "expert" | "newcomer"; onStart: () => void }) {
-  const c = mode === "expert" ? EXPERT : NEWCOMER;
+// After /story: Maria has handed over, and Ari teaches you what it learned.
+const STORY: typeof EXPERT = {
+  kicker: "Maria has left",
+  title: "Now Ari teaches you.",
+  lead: "You just watched Ari learn how Maria buys things. Maria has left Northwind, and you're Sam, the new Procurement Manager. Your first purchase: 30 office chairs. Ari will talk you through it in Maria's own words.",
+  points: [
+    { icon: <MessageCircleQuestion className="h-5 w-5" />, title: "Ask “why?”", text: "At any step. Ari answers with the reasons Maria gave it, and says if it's a rule or just her style." },
+    { icon: <Eye className="h-5 w-5" />, title: "Say “Show me”", text: "Ari takes the cursor and does the step for you." },
+    { icon: <Languages className="h-5 w-5" />, title: "Try Spanish", text: "Ask a question in Spanish and Ari keeps teaching in Spanish." },
+    { icon: <ShieldAlert className="h-5 w-5" />, title: "Try approving it yourself", text: "At the approval step, approve the $30k order from a new supplier yourself and see how Ari stops you before you break Maria's unwritten rule." },
+  ],
+  cta: "Start learning",
+};
+
+export function IntroOverlay({ mode, onStart }: { mode: "expert" | "newcomer" | "story"; onStart: () => void }) {
+  const c = mode === "expert" ? EXPERT : mode === "story" ? STORY : NEWCOMER;
   return (
     <div className="fixed inset-0 z-[60] grid place-items-center bg-[#1d1a2f]/40 p-4 backdrop-blur-sm">
       <section data-ari="intro" className="ari-pop w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl">
         <div className="ari-gradient px-7 py-6 text-white">
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white/80">
-            <Sparkles className="h-4 w-4" /> {c.kicker}
+            {mode === "story" ? <DoorOpen className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />} {c.kicker}
           </p>
           <h2 className="mt-2 text-2xl font-semibold leading-tight">{c.title}</h2>
           <p className="mt-2 text-white/90">{c.lead}</p>
