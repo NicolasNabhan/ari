@@ -114,3 +114,16 @@ export const MARIA_OBSERVATIONS: WeeklyObservation[] = [
   { day: "Fri", subject: "OfficeHub", metric: "discount", value: 0, unit: "%" },
   { day: "Mon", subject: "OfficeHub", metric: "discount", value: 0, unit: "%" },
 ];
+
+// How Maria does the recurring tasks Ari has no recorded lesson for, in short
+// steps (keyed by schedule item id). Purchase-request steps come from lessons.
+export const MARIA_TASK_STEPS: Record<string, string[]> = {
+  "mon-requests": ["Open the Inbox and read each new purchase request", "Check who needs it, how many and by when", "Start with the ones with a hard deadline"],
+  "mon-quotes": ["Open each request in Requests", "Tick the approved vendors in Vendors & quotes"],
+  "wed-approvals": ["Open Approvals for each request with a vendor picked"],
+  "thu-pos": ["Check the approval came back for each request"],
+  "tue-supplies": ["Open the OfficeHub order form", "Re-order the usual office supplies", "Order before noon so it ships the same day"],
+  "tue-email": ["Answer suppliers' questions about open quotes", "Chase any quote that hasn't arrived"],
+  "fri-deliveries": ["List the purchase orders due this week", "Check each one arrived on the promised date", "Email the supplier about anything late"],
+  "fri-wrap": ["List the open purchase orders", "Write the spend report for the week", "Send it to Dana in Finance"],
+};

@@ -269,7 +269,7 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
             ))}
           </ul>
         </nav>
-        <main key={screen} className={`ari-rise min-w-0 flex-1 p-6 ${guided && !teaching && started ? "pt-56" : teaching && started ? "pt-24" : ""}`}>          {screen === "inbox" && <Inbox requests={requests} onOpen={openRequest} />}
+        <main key={screen} className={`ari-rise min-w-0 flex-1 p-6 ${guided && !teaching && started ? "pt-56" : teaching && started ? "pt-24" : ""}`}>          {screen === "inbox" && <Inbox requests={requests} onOpen={openRequest} onOpenPlan={teaching ? () => go("week") : undefined} />}
           {screen === "requests" && (
             <RequestQueue
               requests={requests}
@@ -318,7 +318,7 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
             />
           )}
           {screen === "procedure" && <Procedure />}
-          {screen === "week" && <WeekView audience={audience} />}
+          {screen === "week" && <WeekView audience={audience} lessons={lessons} />}
           {screen === "context" && <ContextHub audience={audience} />}
         </main>
         <aside data-gaze-ignore="" className="w-80 shrink-0 2xl:w-[22rem] space-y-5 overflow-y-auto border-l border-white/60 bg-white/50 p-4 pb-96 backdrop-blur">
