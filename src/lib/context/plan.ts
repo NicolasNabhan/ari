@@ -16,7 +16,7 @@ export type PlanItem = {
   kind: ScheduleKind;
   title: string;
   role: "attend" | "do" | "break";
-  note?: string; // "You'll attend with Dana (Finance)"
+  note?: string; // "You'll attend with Priya (Finance)"
   advice?: string; // from a pattern: why this slot
   level?: Level;
   patternId?: string;

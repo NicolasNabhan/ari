@@ -213,7 +213,7 @@ export function workdayOf(date: Date): Weekday {
 }
 
 // Knowledge taught to Ari that was said in a meeting, so teach mode can cite
-// it ("Raj said this in the CFO approvals check-in"). Set by the knowledge store.
+// it ("David said this in the CFO approvals check-in"). Set by the knowledge store.
 export type Citation = { step: StepId; text: string; who?: string; where: string };
 let citations: Citation[] = [];
 export function setCitations(next: Citation[]) {

@@ -9,7 +9,7 @@ import type { ContextSource, ScheduleItem, WeeklyObservation } from "./types";
 export const MARIA_SCHEDULE: ScheduleItem[] = [
   // Monday
   { id: "mon-standup", day: "Mon", start: "09:00", minutes: 15, kind: "meeting", title: "Ops stand-up", with: ["Ops team"] },
-  { id: "mon-finance", day: "Mon", start: "09:30", minutes: 30, kind: "meeting", title: "Weekly Finance sync", with: ["Dana (Finance)"], sourceId: "mtg-finance-sync" },
+  { id: "mon-finance", day: "Mon", start: "09:30", minutes: 30, kind: "meeting", title: "Weekly Finance sync", with: ["Priya (Finance)"], sourceId: "mtg-finance-sync" },
   { id: "mon-requests", day: "Mon", start: "10:00", minutes: 90, kind: "task", title: "Triage new purchase requests" },
   { id: "mon-lunch", day: "Mon", start: "12:30", minutes: 45, kind: "break", title: "Lunch" },
   { id: "mon-quotes", day: "Mon", start: "14:00", minutes: 120, kind: "task", title: "Request quotes for open requests" },
@@ -24,7 +24,7 @@ export const MARIA_SCHEDULE: ScheduleItem[] = [
   { id: "wed-approvals", day: "Wed", start: "10:00", minutes: 90, kind: "task", title: "Route approvals" },
   { id: "wed-lunch", day: "Wed", start: "12:30", minutes: 45, kind: "break", title: "Lunch" },
   { id: "wed-break", day: "Wed", start: "14:00", minutes: 10, kind: "break", title: "Short break" },
-  { id: "wed-cfo", day: "Wed", start: "15:00", minutes: 20, kind: "meeting", title: "CFO approvals check-in", with: ["Raj (CFO)"], sourceId: "mtg-cfo-checkin" },
+  { id: "wed-cfo", day: "Wed", start: "15:00", minutes: 20, kind: "meeting", title: "CFO approvals check-in", with: ["David (CFO)"], sourceId: "mtg-cfo-checkin" },
   // Thursday
   { id: "thu-standup", day: "Thu", start: "09:00", minutes: 15, kind: "meeting", title: "Ops stand-up", with: ["Ops team"] },
   { id: "thu-vendor", day: "Thu", start: "11:00", minutes: 45, kind: "meeting", title: "Vendor review call", with: ["Apex Tech", "Brightline Systems"], sourceId: "mtg-vendor-review" },
@@ -45,14 +45,14 @@ export const MARIA_SOURCES: ContextSource[] = [
     title: "Weekly Finance sync",
     day: "Mon",
     time: "09:30",
-    from: "Dana (Finance)",
+    from: "Priya (Finance)",
     origin: "sample",
     text: [
-      "Dana: Quick one on vendor scoring. When you compare quotes, use our formula: forty percent price, sixty percent delivery record.",
+      "Priya: Quick one on vendor scoring. When you compare quotes, use our formula: forty percent price, sixty percent delivery record.",
       "Maria: Still sixty on delivery? Even when one is much cheaper?",
-      "Dana: Yes. A late laptop costs us more than the difference. It's not in the procedure, it's just how Finance wants it.",
+      "Priya: Yes. A late laptop costs us more than the difference. It's not in the procedure, it's just how Finance wants it.",
       "Maria: Got it. I'll keep entering the weighted score in the sheet.",
-      "Dana: And send me the spend report on Fridays like always.",
+      "Priya: And send me the spend report on Fridays like always.",
     ].join("\n"),
   },
   {
@@ -61,12 +61,12 @@ export const MARIA_SOURCES: ContextSource[] = [
     title: "CFO approvals check-in",
     day: "Wed",
     time: "15:00",
-    from: "Raj (CFO)",
+    from: "David (CFO)",
     origin: "sample",
     text: [
-      "Raj: One thing I want to be clear about. Any new supplier, anything over twenty-five thousand, comes to me first.",
+      "David: One thing I want to be clear about. Any new supplier, anything over twenty-five thousand, comes to me first.",
       "Maria: Even if I'm allowed to approve it myself under the procedure?",
-      "Raj: Even then. We got burned by a new supplier last year. I want to see those.",
+      "David: Even then. We got burned by a new supplier last year. I want to see those.",
       "Maria: Understood, I'll route them to you.",
     ].join("\n"),
   },
@@ -125,5 +125,5 @@ export const MARIA_TASK_STEPS: Record<string, string[]> = {
   "tue-supplies": ["Open the OfficeHub order form", "Re-order the usual office supplies", "Order before noon so it ships the same day"],
   "tue-email": ["Answer suppliers' questions about open quotes", "Chase any quote that hasn't arrived"],
   "fri-deliveries": ["List the purchase orders due this week", "Check each one arrived on the promised date", "Email the supplier about anything late"],
-  "fri-wrap": ["List the open purchase orders", "Write the spend report for the week", "Send it to Dana in Finance"],
+  "fri-wrap": ["List the open purchase orders", "Write the spend report for the week", "Send it to Priya in Finance"],
 };

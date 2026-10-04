@@ -12,7 +12,7 @@ describe("buildPlan: week", () => {
     const { week } = plan();
     const finance = week.find((w) => w.id === "plan-mon-finance")!;
     expect(finance.role).toBe("attend");
-    expect(finance.note).toBe("You'll attend with Dana (Finance)");
+    expect(finance.note).toBe("You'll attend with Priya (Finance)");
     const wedBreak = week.find((w) => w.id === "plan-wed-break")!;
     expect(wedBreak.role).toBe("break");
     expect(wedBreak.minutes).toBe(10);

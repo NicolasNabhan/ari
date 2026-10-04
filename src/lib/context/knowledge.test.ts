@@ -7,19 +7,19 @@ const source = (id: string) => MARIA_SOURCES.find((s) => s.id === id)!;
 const all = MARIA_SOURCES.flatMap(extractKnowledge);
 
 describe("rule-based knowledge extraction (offline fallback)", () => {
-  it("finds Finance's 40/60 scoring formula, said by Dana in the Finance sync", () => {
+  it("finds Finance's 40/60 scoring formula, said by Priya in the Finance sync", () => {
     const items = extractKnowledge(source("mtg-finance-sync"));
     const formula = items.find((k) => /40%.*price.*60%.*delivery/.test(k.text));
     expect(formula).toMatchObject({ step: "scoring", level: "must", source: "Told by a person", sourceId: "mtg-finance-sync" });
     expect(source("mtg-finance-sync").text).toContain(formula!.quote!);
-    expect(speakerOf(formula!.quote, source("mtg-finance-sync"))).toBe("Dana");
+    expect(speakerOf(formula!.quote, source("mtg-finance-sync"))).toBe("Priya");
   });
 
   it("finds the CFO rule for new suppliers over $25k, linked to the approval step", () => {
     const items = extractKnowledge(source("mtg-cfo-checkin"));
     const cfo = items.find((k) => /New suppliers over \$25,000 go to the CFO first/.test(k.text));
     expect(cfo).toMatchObject({ step: "approval", level: "must", source: "Told by a person" });
-    expect(speakerOf(cfo!.quote, source("mtg-cfo-checkin"))).toBe("Raj");
+    expect(speakerOf(cfo!.quote, source("mtg-cfo-checkin"))).toBe("David");
   });
 
   it("finds Apex's late deliveries in the vendor review call", () => {
@@ -42,7 +42,7 @@ describe("rule-based knowledge extraction (offline fallback)", () => {
   });
 
   it("doesn't invent knowledge from small talk", () => {
-    expect(extractKnowledge({ ...source("mtg-cfo-checkin"), text: "Raj: Morning!\nMaria: Hi Raj, how was the weekend?" })).toEqual([]);
+    expect(extractKnowledge({ ...source("mtg-cfo-checkin"), text: "David: Morning!\nMaria: Hi David, how was the weekend?" })).toEqual([]);
   });
 
   it("gives every item a unique id and an exact quote", () => {
@@ -54,7 +54,7 @@ describe("rule-based knowledge extraction (offline fallback)", () => {
 describe("citing and highlighting", () => {
   it("cites where a meeting rule was said, for teach mode", () => {
     const cfo = all.filter((k) => k.sourceId === "mtg-cfo-checkin");
-    expect(citationsFrom(cfo, MARIA_SOURCES)[0]).toMatchObject({ step: "approval", who: "Raj", where: "CFO approvals check-in" });
+    expect(citationsFrom(cfo, MARIA_SOURCES)[0]).toMatchObject({ step: "approval", who: "David", where: "CFO approvals check-in" });
     expect(citeSource(source("mtg-cfo-checkin"))).toBe("CFO approvals check-in, Wed 15:00");
     // Files aren't cited as something someone said.
     expect(citationsFrom(all.filter((k) => k.sourceId === "file-procedure"), MARIA_SOURCES)).toEqual([]);
@@ -71,7 +71,7 @@ describe("citing and highlighting", () => {
         { id: "1", sourceId: "s", text: "t", source: "Told by a person", quote: "ANY NEW SUPPLIER" },
         { id: "2", sourceId: "s", text: "t", source: "Told by a person", quote: "made up" },
       ],
-      "Raj: Any new supplier comes to me.",
+      "David: Any new supplier comes to me.",
     );
     expect(fixed.map((k) => k.quote)).toEqual(["Any new supplier", undefined]);
   });

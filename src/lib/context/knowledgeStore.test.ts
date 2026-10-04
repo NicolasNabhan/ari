@@ -24,9 +24,9 @@ describe("knowledge store", () => {
     addSource(cfoMeeting);
     const items = extractKnowledge(cfoMeeting);
     setItems(cfoMeeting.id, items, "rules");
-    expect(explainStep("approval", MARIA_SESSION, []).text).not.toMatch(/Raj said this/);
+    expect(explainStep("approval", MARIA_SESSION, []).text).not.toMatch(/David said this/);
     teach(items.map((k) => k.id));
-    expect(explainStep("approval", MARIA_SESSION, []).text).toMatch(/Raj said this in the CFO approvals check-in: New suppliers over \$25,000 go to the CFO first/);
+    expect(explainStep("approval", MARIA_SESSION, []).text).toMatch(/David said this in the CFO approvals check-in: New suppliers over \$25,000 go to the CFO first/);
   });
 
   it("forgets taught knowledge when its source is removed", () => {
@@ -36,7 +36,7 @@ describe("knowledge store", () => {
     teach(items.map((k) => k.id));
     removeSource(cfoMeeting.id);
     expect(getKnowledge()).toMatchObject({ sources: [], accepted: [] });
-    expect(explainStep("approval", MARIA_SESSION, []).text).not.toMatch(/Raj said this/);
+    expect(explainStep("approval", MARIA_SESSION, []).text).not.toMatch(/David said this/);
   });
 
   it("brings the sample meetings with a demo connection, and the files separately", () => {

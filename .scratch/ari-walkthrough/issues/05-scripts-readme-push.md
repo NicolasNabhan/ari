@@ -7,9 +7,9 @@
 
 **Blocked by:** 03, 04
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Demo video script written
-- [ ] Tech video script written
-- [ ] README updated
-- [ ] typecheck, lint, tests and build pass, then push
+- [x] Demo video script written
+- [x] Tech video script written
+- [x] README updated
+- [x] typecheck, lint, tests and build pass, then push
