@@ -1,6 +1,7 @@
 // Teach mode: turning what Ari learned from the expert into spoken guidance
 // for a newcomer (in English or Spanish), "show me" cursor moves, and the
 // must-follow rules it checks before they act.
+import { citationsFor } from "@/lib/context/knowledge";
 import { largestOrder, vendor, vendorsQuoting } from "@/lib/northwind/seed";
 import type { Profile } from "@/lib/workspace/profile";
 import type { WorkspaceEvent } from "@/lib/workspace/events";
@@ -28,6 +29,7 @@ type Phrases = {
   knowledgeTold: (expert: string, text: string) => string;
   knowledgeFound: (expert: string, text: string, source: string) => string;
   notSeen: (expert: string) => string;
+  cited: (who: string | undefined, where: string, text: string) => string;
   watch: (expert: string) => Record<StepId, string>;
   or: string;
 };
@@ -59,6 +61,7 @@ const EN: Phrases = {
     `To compare vendors, ${expert} uses this: ${text}. It isn't written down anywhere; ${expert} learned it from a colleague, so remember it.`,
   knowledgeFound: (expert, text, source) => `To compare vendors, ${expert} uses this: ${text}. You can find it in: ${lcfirst(source)}.`,
   notSeen: (expert) => `${expert} didn't do that step in the session I watched, so I don't know yet.`,
+  cited: (who, where, text) => `${who ? `${who} said this in the ${where}` : `This came up in the ${where}`}: ${text}`,
   watch: (expert) => ({
     quotes: `Watch: I'll ask the vendors for quotes, the way ${expert} does.`,
     vendor: `Watch: ${expert} always opens the delivery history before choosing. Then the choice is yours.`,
@@ -96,6 +99,7 @@ const ES: Phrases = {
     `Para comparar proveedores, ${expert} usa esto: "${text}". No está escrito en ningún sitio; ${expert} lo aprendió de un compañero, así que recuérdalo.`,
   knowledgeFound: (expert, text, source) => `Para comparar proveedores, ${expert} usa esto: "${text}". Lo encontrarás en: ${lcfirst(source)}.`,
   notSeen: (expert) => `${expert} no hizo ese paso en la sesión que observé, así que todavía no lo sé.`,
+  cited: (who, where, text) => `${who ? `${who} lo dijo en la reunión "${where}"` : `Esto salió en la reunión "${where}"`}: "${text}"`,
   watch: (expert) => ({
     quotes: `Mira: voy a pedir presupuestos a los proveedores, como lo hace ${expert}.`,
     vendor: `Mira: ${expert} siempre abre el historial de entregas antes de elegir. Luego la decisión es tuya.`,
@@ -169,6 +173,8 @@ export function explainStep(stepId: StepId, lessons: Lessons, quotedVendorIds: s
     if (level) parts.push(level);
     if (card.howNotes.length) parts.push(p.how(lessons.expert, card.howNotes));
   }
+  // Rules taught from meetings, cited where they were said.
+  for (const c of citationsFor(stepId).slice(0, 2)) parts.push(p.cited(c.who, c.where, c.text));
   // Knowledge the step depends on, and where to find it (from any step).
   if (stepId === "vendor") {
     for (const item of lessons.cards.flatMap((c) => c.knowledge ?? [])) {
