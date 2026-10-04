@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 // Stock ElevenLabs voices; override per speaker with ELEVENLABS_VOICE_ARI / ELEVENLABS_VOICE_MARIA.
 const DEFAULT_VOICES: Record<string, string> = {
-  ari: "XjGYkUkzth8BPs29fmcV", // Teddy Twinkle: a cute little cartoon character, for Ari the robot
+  ari: "3XOBzXhnDY98yeWQ3GdM", // Brayden: a cheery, clear, chill teenager, for Ari the little robot
   maria: "EXAVITQu4vr4xnSDxMaL", // Sarah: a confident, reassuring woman
 };
 
