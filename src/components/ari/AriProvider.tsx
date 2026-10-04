@@ -1,11 +1,12 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { browserSpeak, listenForAnswer, MIC_PROBLEM_TEXT } from "@/lib/ari/browserVoice";
+import { listenForAnswer, MIC_PROBLEM_TEXT } from "@/lib/ari/browserVoice";
+import { speak } from "@/lib/ari/speech";
 import { Sparkles } from "lucide-react";
 import { VoicePanel } from "./VoicePanel";
 import { sounds } from "@/lib/ari/sounds";
-import { chooseFace, type Alignment, type AvatarState, type FaceChoice } from "@/lib/ari/face";
+import { chooseFace, type AvatarState, type FaceChoice } from "@/lib/ari/face";
 import { TalkingHeadFace, type FaceHandle } from "./TalkingHeadFace";
 
 type Ari = {
@@ -34,7 +35,11 @@ export function useAri(): Ari {
 const LIVE_CONFIGURED = process.env.NEXT_PUBLIC_LIVEAVATAR_ENABLED === "1";
 const DEMO_KEY_ON = process.env.NEXT_PUBLIC_DEMO_KEY_ON !== "0";
 
-export function AriProvider({ children, initialState = "bubble" }: React.PropsWithChildren<{ initialState?: AvatarState }>) {
+export function AriProvider({
+  children,
+  initialState = "bubble",
+  hideAvatar = false,
+}: React.PropsWithChildren<{ initialState?: AvatarState; hideAvatar?: boolean }>) {
   const [state, setState] = useState<AvatarState>(initialState);
   const [caption, setCaption] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState(false);
@@ -48,23 +53,7 @@ export function AriProvider({ children, initialState = "bubble" }: React.PropsWi
     const id = ++latest.current;
     setCaption(text);
     setSpeaking(true);
-    if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
-    faceRef.current?.stop();
-    const face = faceRef.current;
-
-    // 1. ElevenLabs voice: real audio with exact word timings → precise lip-sync.
-    const voiced = face?.ready() ? await elevenLabsSpeech(text, lang) : null;
-    if (id !== latest.current) return; // a newer line started meanwhile
-    if (voiced && face) {
-      try {
-        await face.speakAudio(voiced.audio, voiced.alignment);
-      } catch {
-        await speakWithBrowser(text, lang, face);
-      }
-    } else {
-      // 2. Browser voice: move the mouth word by word, as each word is spoken.
-      await speakWithBrowser(text, lang, face);
-    }
+    await speak(faceRef.current, text, { lang, speaker: "ari", isCurrent: () => id === latest.current });
     // A newer line may have cut this one off; only the newest one stops the face.
     if (id !== latest.current) return;
     faceRef.current?.stop();
@@ -122,7 +111,7 @@ export function AriProvider({ children, initialState = "bubble" }: React.PropsWi
   return (
     <AriContext.Provider value={value}>
       {children}
-      <AriAvatar
+      {!hideAvatar && <AriAvatar
         state={state}
         caption={caption}
         speaking={speaking}
@@ -133,7 +122,7 @@ export function AriProvider({ children, initialState = "bubble" }: React.PropsWi
         micProblem={micProblem}
         onAnswer={finish}
         onRetryMic={startMic}
-      />
+      />}
     </AriContext.Provider>
   );
 }
@@ -165,33 +154,6 @@ function safeSession(op: "get" | "set", value?: string): string | null {
   } catch {
     return null;
   }
-}
-
-let elevenLabsAvailable = true;
-async function elevenLabsSpeech(text: string, lang: string) {
-  if (!elevenLabsAvailable) return null;
-  try {
-    const res = await fetch("/api/tts", { method: "POST", body: JSON.stringify({ text, lang }) });
-    if (res.status === 503) elevenLabsAvailable = false;
-    if (!res.ok) return null;
-    return (await res.json()) as { audio: string; alignment: Alignment };
-  } catch {
-    return null;
-  }
-}
-
-async function speakWithBrowser(text: string, lang: string, face: FaceHandle | null) {
-  let gotWords = false;
-  // If this voice doesn't report word boundaries, fall back to estimated timings.
-  const fallback = setTimeout(() => {
-    if (!gotWords) face?.mouth(text, 1, lang.slice(0, 2));
-  }, 350);
-  await browserSpeak(text, lang, (word) => {
-    if (!gotWords) face?.stop();
-    gotWords = true;
-    face?.mouthWord(word);
-  });
-  clearTimeout(fallback);
 }
 
 const FRAME: Record<AvatarState, string> = {

@@ -47,11 +47,18 @@ import { ReviewList } from "@/components/apprentice/ReviewList";
 import { ProcedureView } from "@/components/apprentice/ProcedureView";
 import { AriProvider } from "@/components/ari/AriProvider";
 
-export function Workspace({ audience, lessons, guided = false }: { audience: Audience; lessons?: Lessons; guided?: boolean }) {
+export function Workspace({
+  audience,
+  lessons,
+  guided = false,
+  story = false,
+  children,
+}: React.PropsWithChildren<{ audience: Audience; lessons?: Lessons; guided?: boolean; story?: boolean }>) {
   return (
     <EventBusProvider>
-      <AriProvider>
-        <WorkspaceShell audience={audience} lessons={lessons} guided={guided} />
+      <AriProvider hideAvatar={story}>
+        <WorkspaceShell audience={audience} lessons={lessons} guided={guided} story={story} />
+        {children}
       </AriProvider>
     </EventBusProvider>
   );
@@ -67,7 +74,7 @@ const NAV: { screen: Screen; label: string; icon: LucideIcon }[] = [
   { screen: "procedure", label: "Procedure", icon: BookText },
 ];
 
-function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; lessons?: Lessons; guided: boolean }) {
+function WorkspaceShell({ audience, lessons, guided, story }: { audience: Audience; lessons?: Lessons; guided: boolean; story: boolean }) {
   const bus = useEventBus();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -93,11 +100,12 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
   useRecording(!!profile);
 
   useEffect(() => {
-    // Browser storage is only readable after mount.
+    // Browser storage is only readable after mount. In the story, Maria is a
+    // character, so there's no profile form.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setProfile(loadProfile(audience));
+    setProfile(story ? (audience === "expert" ? MARIA : NEWCOMER) : loadProfile(audience));
     setLoaded(true);
-  }, [audience]);
+  }, [audience, story]);
 
   const requests = northwind.requests.filter((r) => r.audience === audience);
   const currentRequest = () => requests.find((r) => r.id === openRequestId) ?? null;
@@ -175,7 +183,7 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
 
   const userName = profile.name;
   return (
-    <div className="flex min-h-screen flex-col text-zinc-900">
+    <div className={`flex flex-col text-zinc-900 ${story ? "h-full overflow-hidden" : "min-h-screen"}`}>
       <header className="sticky top-0 z-30 flex h-[60px] items-center justify-between gap-4 border-b border-white/60 bg-white/80 px-5 backdrop-blur">
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2" title="Back to start">
@@ -337,7 +345,7 @@ function WorkspaceShell({ audience, lessons, guided }: { audience: Audience; les
           </div>
         </aside>
       </div>
-      {!started && <IntroOverlay mode={teaching ? "newcomer" : "expert"} onStart={() => setStarted(true)} />}
+      {!started && !story && <IntroOverlay mode={teaching ? "newcomer" : "expert"} onStart={() => setStarted(true)} />}
       {guided && !teaching && started && <CoachBar task={task} cards={cards} ended={review.ended} screen={screen} />}
       {teaching && started && <TipsBar lang={lang} />}
       {review.list && (

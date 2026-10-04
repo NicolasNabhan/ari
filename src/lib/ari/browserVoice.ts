@@ -5,16 +5,21 @@
 
 // onWord fires as each word is actually spoken, so the face can move with it.
 // Local (on-device) voices report word boundaries; network voices often don't.
-export function browserSpeak(text: string, lang = "en-US", onWord?: (word: string) => void): Promise<void> {
+export type BrowserVoiceStyle = { prefer?: RegExp; pitch?: number; rate?: number };
+
+export function browserSpeak(text: string, lang = "en-US", onWord?: (word: string) => void, style: BrowserVoiceStyle = {}): Promise<void> {
   return new Promise((resolve) => {
     if (typeof speechSynthesis === "undefined") return resolve();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = lang;
+    u.pitch = style.pitch ?? 1;
+    u.rate = style.rate ?? 1;
     const voices = speechSynthesis.getVoices().filter((v) => v.lang.startsWith(lang.slice(0, 2)));
     const voice =
-      voices.find((v) => v.localService && /premium|enhanced/i.test(v.name)) ??
-      voices.find((v) => v.localService && /samantha|ava|allison|susan|zoe|m[oó]nica|paulina|female/i.test(v.name)) ??
-      voices.find((v) => v.localService) ??
+      (style.prefer && voices.find((v) => v.localService && style.prefer!.test(v.name))) ||
+      voices.find((v) => v.localService && /premium|enhanced/i.test(v.name)) ||
+      voices.find((v) => v.localService && /samantha|ava|allison|susan|zoe|m[oó]nica|paulina|female/i.test(v.name)) ||
+      voices.find((v) => v.localService) ||
       voices[0];
     if (voice) u.voice = voice;
     if (onWord) {
