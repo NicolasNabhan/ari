@@ -292,6 +292,9 @@ mark { background: linear-gradient(transparent 55%, rgb(249 115 98 / .35) 55%); 
 .vcard .vtext h3 { margin-bottom: 6px; }
 .vcard .vtext p { color: var(--ink-2); font-size: 15px; }
 .vcard .vlen { display: inline-block; margin-top: 10px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ari-600); }
+.videos { padding-top: 56px; }
+.vcta { margin-top: 36px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.vcta p { color: var(--ink-2); font-size: 17px; }
 /* demo + cta */
 .cta { border-radius: 32px; padding: 56px; color: #fff; background: var(--grad); position: relative; overflow: hidden; }
 .cta::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: rgb(255 255 255 / .12); }
@@ -357,7 +360,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wr
       <a href="#teach">Teaching</a>
       <a href="#under-the-hood">Under the hood</a>
     </div>
-    <a class="btn btn-primary demo-link" href="#try">Try the demo <i data-lucide="arrow-right"></i></a>
+    <a class="btn btn-primary" href="#videos">Watch the videos <i data-lucide="arrow-right"></i></a>
   </div>
 </nav>
 
@@ -368,7 +371,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wr
       <h1>When your best people leave, <span class="grad-text">their know-how stays.</span></h1>
       <p class="lead">Ari is an AI apprentice. It sits beside a veteran employee, watches how they really work, what they click and even what they read, asks &ldquo;why?&rdquo; only when it can&rsquo;t work out a choice that matters, and then teaches the next person by voice, including the rules nobody ever wrote down.</p>
       <div class="hero-cta">
-        <a class="btn btn-primary demo-link" href="#try"><i data-lucide="play"></i> Try the live demo</a>
+        <a class="btn btn-primary" href="#videos"><i data-lucide="play"></i> Watch the videos</a>
         <a class="btn btn-ghost" href="#how"><i data-lucide="sparkles"></i> See how Ari learns</a>
       </div>
       <div class="chips">
@@ -423,32 +426,12 @@ footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wr
   </div>
 </header>
 
-<section class="problem">
-  <div class="wrap">
-    <div class="reveal">
-      <span class="kicker">The problem</span>
-      <h2 style="margin-top:10px">The procedure says one thing. <span class="grad-text">The expert does another.</span></h2>
-      <p class="lead" style="margin-top:14px">Every company has written procedures. But the people who do the job best follow a second set of rules that only lives in their heads: a scoring formula from Finance, a supplier you never trust with a deadline, an approval that always goes to the CFO. When they retire or move on, that knowledge walks out the door, and the next person learns it the hard way.</p>
-      <div class="stat-row">
-        <div class="stat"><b class="grad-text">Why</b><span>is what gets lost, not what</span></div>
-        <div class="stat"><b class="grad-text">Unwritten</b><span>rules cause the costly mistakes</span></div>
-        <div class="stat"><b class="grad-text">Weeks</b><span>of shadowing, replaced by Ari</span></div>
-      </div>
-    </div>
-    <div class="gap-visual reveal">
-      <div class="doc"><div class="t"><i data-lucide="file-text"></i> Purchasing procedure v4, §4</div><div class="l">Managers may approve purchases up to $50,000 themselves.</div></div>
-      <div class="doc unwritten"><span class="ribbon"><i data-lucide="file-warning"></i> Unwritten rule</span><div class="l" style="margin-top:10px;color:#9f1239"><b>What Maria actually does:</b> new suppliers over $25,000 always go to the CFO first. &ldquo;It&rsquo;s not written down anywhere.&rdquo;</div></div>
-      <div class="doc"><div class="t"><i data-lucide="sparkles" style="color:#7c5cff"></i> Ari</div><div class="l">&ldquo;The procedure doesn&rsquo;t require that for $38,400. Why send it to the CFO?&rdquo;</div></div>
-    </div>
-  </div>
-</section>
-
 <section id="videos" class="videos">
   <div class="wrap">
     <div class="section-head reveal">
-      <span class="kicker">Watch</span>
-      <h2>See Ari in action, <span class="grad-text">in two short videos</span>.</h2>
-      <p class="lead">A quick tour of what Ari does, and a look at how it&rsquo;s built.</p>
+      <span class="kicker">Start here</span>
+      <h2>Watch what Ari is, <span class="grad-text">then try it</span>.</h2>
+      <p class="lead">Two short videos: what Ari does, and how it&rsquo;s built. Then open the live demo and try it yourself.</p>
     </div>
     <div class="vgrid">
       <div class="vcard reveal">
@@ -471,6 +454,30 @@ footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wr
           <span class="vlen">About 2 minutes</span>
         </div>
       </div>
+    </div>
+    <div class="vcta reveal">
+      <p>Seen enough? Try it yourself.</p>
+      <a class="btn btn-primary demo-link" href="#"><i data-lucide="play"></i> Try the live demo</a>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="kicker">The problem</span>
+      <h2 style="margin-top:10px">The procedure says one thing. <span class="grad-text">The expert does another.</span></h2>
+      <p class="lead" style="margin-top:14px">Every company has written procedures. But the people who do the job best follow a second set of rules that only lives in their heads: a scoring formula from Finance, a supplier you never trust with a deadline, an approval that always goes to the CFO. When they retire or move on, that knowledge walks out the door, and the next person learns it the hard way.</p>
+      <div class="stat-row">
+        <div class="stat"><b class="grad-text">Why</b><span>is what gets lost, not what</span></div>
+        <div class="stat"><b class="grad-text">Unwritten</b><span>rules cause the costly mistakes</span></div>
+        <div class="stat"><b class="grad-text">Weeks</b><span>of shadowing, replaced by Ari</span></div>
+      </div>
+    </div>
+    <div class="gap-visual reveal">
+      <div class="doc"><div class="t"><i data-lucide="file-text"></i> Purchasing procedure v4, §4</div><div class="l">Managers may approve purchases up to $50,000 themselves.</div></div>
+      <div class="doc unwritten"><span class="ribbon"><i data-lucide="file-warning"></i> Unwritten rule</span><div class="l" style="margin-top:10px;color:#9f1239"><b>What Maria actually does:</b> new suppliers over $25,000 always go to the CFO first. &ldquo;It&rsquo;s not written down anywhere.&rdquo;</div></div>
+      <div class="doc"><div class="t"><i data-lucide="sparkles" style="color:#7c5cff"></i> Ari</div><div class="l">&ldquo;The procedure doesn&rsquo;t require that for $38,400. Why send it to the CFO?&rdquo;</div></div>
     </div>
   </div>
 </section>
