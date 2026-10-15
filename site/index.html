@@ -284,6 +284,14 @@ mark { background: linear-gradient(transparent 55%, rgb(249 115 98 / .35) 55%); 
 .stack { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 36px; }
 .stack span { font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 12px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); }
 
+/* videos */
+.videos .vgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 28px; margin-top: 40px; }
+.vcard { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.vcard video { width: 100%; aspect-ratio: 16 / 9; display: block; background: #0b0a14; }
+.vcard .vtext { padding: 18px 22px 22px; }
+.vcard .vtext h3 { margin-bottom: 6px; }
+.vcard .vtext p { color: var(--ink-2); font-size: 15px; }
+.vcard .vlen { display: inline-block; margin-top: 10px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ari-600); }
 /* demo + cta */
 .cta { border-radius: 32px; padding: 56px; color: #fff; background: var(--grad); position: relative; overflow: hidden; }
 .cta::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: rgb(255 255 255 / .12); }
@@ -342,6 +350,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wr
   <div class="wrap">
     <a href="#top" class="brand"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="13" rx="6.5" fill="#05070c"/><rect x="7.5" y="8.5" width="2.6" height="5" rx="1.3" fill="#a5f3fc"/><rect x="13.9" y="8.5" width="2.6" height="5" rx="1.3" fill="#a5f3fc"/></svg></span>Ari</a>
     <div class="nav-links">
+      <a href="#videos">Videos</a>
       <a href="#how">How it learns</a>
       <a href="#watch">Watching</a>
       <a href="#big-picture">The big picture</a>
@@ -430,6 +439,38 @@ footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wr
       <div class="doc"><div class="t"><i data-lucide="file-text"></i> Purchasing procedure v4, §4</div><div class="l">Managers may approve purchases up to $50,000 themselves.</div></div>
       <div class="doc unwritten"><span class="ribbon"><i data-lucide="file-warning"></i> Unwritten rule</span><div class="l" style="margin-top:10px;color:#9f1239"><b>What Maria actually does:</b> new suppliers over $25,000 always go to the CFO first. &ldquo;It&rsquo;s not written down anywhere.&rdquo;</div></div>
       <div class="doc"><div class="t"><i data-lucide="sparkles" style="color:#7c5cff"></i> Ari</div><div class="l">&ldquo;The procedure doesn&rsquo;t require that for $38,400. Why send it to the CFO?&rdquo;</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="videos" class="videos">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker">Watch</span>
+      <h2>See Ari in action, <span class="grad-text">in two short videos</span>.</h2>
+      <p class="lead">A quick tour of what Ari does, and a look at how it&rsquo;s built.</p>
+    </div>
+    <div class="vgrid">
+      <div class="vcard reveal">
+        <video controls preload="metadata" playsinline poster="videos/ari-demo-poster.jpg">
+          <source src="videos/ari-demo.mp4" type="video/mp4" />
+        </video>
+        <div class="vtext">
+          <h3>Demo video</h3>
+          <p>Ari learns from a veteran employee, catches the rules nobody wrote down, then teaches the next person.</p>
+          <span class="vlen">About 1 minute</span>
+        </div>
+      </div>
+      <div class="vcard reveal">
+        <video controls preload="metadata" playsinline poster="videos/ari-tech-poster.jpg">
+          <source src="videos/ari-tech.mp4" type="video/mp4" />
+        </video>
+        <div class="vtext">
+          <h3>Tech video: how we built Ari</h3>
+          <p>The Apprentice Core, the swappable Judge, voice, eye tracking, and how Ari learns a whole week.</p>
+          <span class="vlen">About 2 minutes</span>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -768,7 +809,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wr
 
 <footer>
   <div class="wrap">
-    <span><b style="color:var(--ink)">Ari</b> · the AI apprentice. Built for the 7th Hack-Nation Global AI Hackathon.</span>
+    <span><b style="color:var(--ink)">Ari</b> · the AI apprentice. Built in 24 hours at the 7th Hack-Nation Global AI Hackathon, held at MIT.</span>
     <span>Northwind Supply, Maria and all data in the demo are fictional.</span>
   </div>
 </footer>

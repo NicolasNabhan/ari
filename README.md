@@ -4,6 +4,10 @@
 
 Built for the 7th Hack-Nation Global AI Hackathon, Challenge 1: *The AI Apprentice* (ElevenLabs).
 
+**Website with demo and tech videos:** https://ari-site-ruby.vercel.app · **Live demo:** https://ari-catch-up1.vercel.app
+
+Built in 24 hours at the hackathon, held at MIT, by a team of two.
+
 ## Try it
 
 The demo is a simulation inside an **office simulator** (a made-up company, Northwind Supply). **Ari** is our program, a little learner bot. **Maria** is a simulated veteran Procurement Manager. Open the live demo in Chrome with sound on:
